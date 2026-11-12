@@ -1,7 +1,7 @@
 require('dotenv').config()
 require('express-async-errors')  // catch async route errors automatically
 const express = require('express')
-const session = require('express-session')
+const cookieSession = require('cookie-session')
 const path = require('path')
 
 const app = express()
@@ -13,32 +13,13 @@ app.use(express.static(path.join(__dirname, 'public')))
 app.use(express.urlencoded({ extended: true }))
 app.use(express.json())
 
-// ── Session store ─────────────────────────────────────────────────────────────
-let sessionStore
-if (process.env.DATABASE_URL) {
-  const pgSession = require('connect-pg-simple')(session)
-  const { pool } = require('./db/db')
-  sessionStore = new pgSession({
-    pool,
-    tableName: 'user_sessions',
-    createTableIfMissing: true,
-  })
-} else {
-  try {
-    const SQLiteStore = require('connect-sqlite3')(session)
-    sessionStore = new SQLiteStore({ db: 'sessions.db', dir: path.join(__dirname, 'db') })
-  } catch (e) {
-    console.error('[session] connect-sqlite3 unavailable, using memory store:', e.message)
-    sessionStore = undefined // express-session falls back to MemoryStore
-  }
-}
-
-app.use(session({
-  store: sessionStore,
-  secret: process.env.SESSION_SECRET || 'dev-secret-change-in-production',
-  resave: false,
-  saveUninitialized: false,
-  cookie: { httpOnly: true, secure: process.env.NODE_ENV === 'production', maxAge: 7 * 24 * 60 * 60 * 1000 },
+app.use(cookieSession({
+  name: 'sess',
+  keys: [process.env.SESSION_SECRET || 'dev-secret-change-in-production'],
+  maxAge: 7 * 24 * 60 * 60 * 1000,
+  secure: process.env.NODE_ENV === 'production',
+  httpOnly: true,
+  sameSite: 'lax',
 }))
 
 // ── Global res.locals ─────────────────────────────────────────────────────────

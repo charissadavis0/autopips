@@ -12,24 +12,8 @@
 
 const { Pool } = require('pg')
 
-function parseDatabaseUrl(raw) {
-  if (!raw) return { connectionString: raw }
-  try {
-    const u = new URL(raw)
-    return {
-      host: u.hostname,
-      port: parseInt(u.port) || 5432,
-      database: decodeURIComponent(u.pathname.replace(/^\//, '')),
-      user: decodeURIComponent(u.username),
-      password: decodeURIComponent(u.password),
-    }
-  } catch (_) {
-    return { connectionString: raw }
-  }
-}
-
 const pool = new Pool({
-  ...parseDatabaseUrl(process.env.DATABASE_URL),
+  connectionString: process.env.DATABASE_URL,
   ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : undefined,
   max: 10,
 })
@@ -107,4 +91,3 @@ const db = {
 }
 
 module.exports = db
-module.exports.pool = pool
