@@ -22,7 +22,8 @@ if (process.env.DATABASE_URL) {
     createTableIfMissing: true,
   })
 } else {
-  const SQLiteStore = require('connect-sqlite3')(session)
+  const sqliteStorePkg = 'connect-sqlite3'
+  const SQLiteStore = require(sqliteStorePkg)(session)
   sessionStore = new SQLiteStore({ db: 'sessions.db', dir: path.join(__dirname, 'db') })
 }
 
