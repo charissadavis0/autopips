@@ -13,7 +13,7 @@
   <div class="topbar-right">
     <% if (typeof balances !== 'undefined' && balances) { %>
     <div class="topbar-balance">
-      <span class="topbar-balance-label">Balance</span>
+      <span class="topbar-balance-label" data-i18n="topbar-balance">Balance</span>
       <span class="topbar-balance-val">$<%= (parseFloat(balances.available) || 0).toFixed(2) %></span>
     </div>
     <% } %>
@@ -29,11 +29,11 @@
     <div class="notif-panel" id="notifPanel" style="display:none;position:absolute;top:calc(100% + 8px);right:40px;width:320px;background:linear-gradient(160deg,rgba(20,28,54,.98),rgba(10,15,30,.98));border:1px solid var(--border2);border-radius:4px;z-index:200;box-shadow:0 16px 40px rgba(0,0,0,.5);overflow:hidden">
       <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid var(--border)">
         <span style="font-weight:700;color:#fff;font-size:.875rem;font-family:'Space Grotesk',sans-serif">Notifications</span>
-        <button id="notifMarkAll" style="background:none;border:none;color:var(--brand);font-size:.78rem;font-weight:600;cursor:pointer">Mark all read</button>
+        <button id="notifMarkAll" style="background:none;border:none;color:var(--brand);font-size:.78rem;font-weight:600;cursor:pointer" data-i18n="topbar-markread">Mark all read</button>
       </div>
       <div id="notifList" style="max-height:360px;overflow-y:auto"></div>
       <div style="padding:10px 16px;border-top:1px solid var(--border);text-align:center">
-        <a href="/notifications" style="font-size:.8rem;color:var(--brand);font-weight:500">View all notifications</a>
+        <a href="/notifications" style="font-size:.8rem;color:var(--brand);font-weight:500" data-i18n="topbar-view-notifs">View all notifications</a>
       </div>
     </div>
 
