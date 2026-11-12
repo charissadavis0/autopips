@@ -12,11 +12,8 @@
 
 const { Pool } = require('pg')
 
-const dbUrl = process.env.DATABASE_URL || ''
-console.log('[db] DATABASE_URL host:', dbUrl.replace(/^[^@]*@/, '').split('/')[0])
-
 const pool = new Pool({
-  connectionString: dbUrl,
+  connectionString: process.env.DATABASE_URL,
   ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : undefined,
   max: 10,
 })
