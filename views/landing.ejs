@@ -284,14 +284,14 @@
     </div>
     <div class="nav-btns">
       <select class="lang-select" id="lang-selector" title="Select language" aria-label="Select language">
-        <option value="en">🌐 English</option>
-        <option value="fr">Français</option>
-        <option value="es">Español</option>
-        <option value="pt">Português</option>
-        <option value="ar">العربية</option>
-        <option value="zh">中文</option>
-        <option value="de">Deutsch</option>
-        <option value="ru">Русский</option>
+        <option value="en">🇬🇧 English</option>
+        <option value="es">🇪🇸 Español</option>
+        <option value="fr">🇫🇷 Français</option>
+        <option value="pt">🇧🇷 Português</option>
+        <option value="de">🇩🇪 Deutsch</option>
+        <option value="ru">🇷🇺 Русский</option>
+        <option value="zh">🇨🇳 中文</option>
+        <option value="ar">🇸🇦 العربية</option>
       </select>
       <a href="/auth/login" class="btn-nav-ghost" data-i18n="nav-login">Log in</a>
       <a href="/auth/signup" class="btn-nav-primary" data-i18n="nav-open">Open Account</a>
@@ -745,7 +745,7 @@ window.addEventListener('scroll', () => {
   })
 })
 
-// ── Translations ────────────────────────────────────────────────────────────
+// ── Translations handled by /js/i18n.js (loaded below) ──────────────────────
 const TRANSLATIONS = {
   en: {
     'nav-home':'Home','nav-about':'About','nav-products':'Products','nav-platform':'Platform','nav-education':'Education','nav-accounts':'Accounts',
@@ -821,30 +821,7 @@ const TRANSLATIONS = {
   },
 }
 
-window.applyLang = function(lang) {
-  const t = TRANSLATIONS[lang] || TRANSLATIONS['en']
-  const rtl = lang === 'ar'
-  document.documentElement.lang = lang
-  document.documentElement.dir = rtl ? 'rtl' : 'ltr'
-  document.querySelectorAll('[data-i18n]').forEach(el => {
-    const key = el.getAttribute('data-i18n')
-    if (t[key] !== undefined) el.innerHTML = t[key]
-  })
-}
-
-// Apply saved / browser language on load
-;(function() {
-  const sel = document.getElementById('lang-selector')
-  const saved = localStorage.getItem('ap_lang') || navigator.language?.slice(0,2) || 'en'
-  const opts = sel ? Array.from(sel.options).map(o => o.value) : []
-  const lang = opts.includes(saved) ? saved : 'en'
-  if (sel) sel.value = lang
-  if (lang !== 'en') window.applyLang(lang)
-  sel && sel.addEventListener('change', function() {
-    localStorage.setItem('ap_lang', this.value)
-    window.applyLang(this.value)
-  })
-})()
+// i18n.js (loaded below) handles applyLang, selector wiring and auto-apply
 </script>
 
 <script src="/js/i18n.js"></script>

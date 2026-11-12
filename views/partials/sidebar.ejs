@@ -158,15 +158,15 @@
     <span class="pill pill-<%= user ? user.tier.toLowerCase() : '' %>"><%= user ? user.tier : '' %></span>
     <div class="mt-2" style="display:flex;align-items:center;justify-content:space-between;gap:8px">
       <a href="/auth/logout" style="color:var(--red);font-size:.8rem;font-weight:500" data-i18n="nav-signout">Sign out</a>
-      <select class="lang-select" title="Language" style="font-size:.75rem;padding:4px 8px;border-radius:6px">
-        <option value="en">🌐 EN</option>
-        <option value="es">ES</option>
-        <option value="fr">FR</option>
-        <option value="pt">PT</option>
-        <option value="de">DE</option>
-        <option value="ru">RU</option>
-        <option value="zh">中文</option>
-        <option value="ar">AR</option>
+      <select class="lang-select" title="Language" style="font-size:.75rem;padding:4px 8px;border-radius:6px;max-width:120px">
+        <option value="en">🇬🇧 English</option>
+        <option value="es">🇪🇸 Español</option>
+        <option value="fr">🇫🇷 Français</option>
+        <option value="pt">🇧🇷 Português</option>
+        <option value="de">🇩🇪 Deutsch</option>
+        <option value="ru">🇷🇺 Русский</option>
+        <option value="zh">🇨🇳 中文</option>
+        <option value="ar">🇸🇦 العربية</option>
       </select>
     </div>
   </div>

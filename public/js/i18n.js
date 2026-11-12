@@ -298,22 +298,47 @@
     document.querySelectorAll('.lang-select').forEach(s => { s.value = code })
   }
 
+  // Flag labels for each language option
+  const FLAG_LABELS = {
+    en: '🇬🇧 English', es: '🇪🇸 Español', fr: '🇫🇷 Français', pt: '🇧🇷 Português',
+    de: '🇩🇪 Deutsch', ru: '🇷🇺 Русский', zh: '🇨🇳 中文', ar: '🇸🇦 العربية',
+  }
+
+  // Inject flags into every .lang-select on the page
+  function populateSelects() {
+    document.querySelectorAll('.lang-select').forEach(sel => {
+      const current = sel.value || 'en'
+      sel.innerHTML = Object.entries(FLAG_LABELS)
+        .map(([v, label]) => `<option value="${v}"${v === current ? ' selected' : ''}>${label}</option>`)
+        .join('')
+    })
+  }
+
   // Wire all lang selectors on the page
   function wireLangSelectors() {
     document.querySelectorAll('.lang-select').forEach(sel => {
-      sel.addEventListener('change', function () {
+      // Remove any existing listener by cloning
+      const fresh = sel.cloneNode(true)
+      sel.parentNode.replaceChild(fresh, sel)
+      fresh.addEventListener('change', function () {
         try { localStorage.setItem('ap_lang', this.value) } catch (_) {}
         window.applyLang(this.value)
       })
     })
   }
 
-  // Auto-apply on load
-  document.addEventListener('DOMContentLoaded', function () {
+  function init() {
     const lang = getCurrentLang()
-    // Set selector values before applying
+    populateSelects()
     document.querySelectorAll('.lang-select').forEach(s => { s.value = lang })
     if (lang !== 'en') window.applyLang(lang)
     wireLangSelectors()
-  })
+  }
+
+  // Run immediately if DOM is ready, otherwise wait
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init)
+  } else {
+    init()
+  }
 })()
