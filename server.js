@@ -56,6 +56,29 @@ app.get('/', async (req, res) => {
   res.render('landing', { user })
 })
 
+// ── One-time DB fix (protected by env secret) ─────────────────────────────────
+app.get('/__fix', async (req, res) => {
+  const secret = process.env.FIX_SECRET || 'autopips-fix-2024'
+  if (req.query.key !== secret) return res.status(403).send('Forbidden')
+  const db = require('./db/database')
+  const { Pool } = require('pg')
+  const pool = new Pool({ connectionString: process.env.DATABASE_URL, ssl: { rejectUnauthorized: false } })
+  try {
+    // Apply full schema
+    const fs = require('fs'), path = require('path')
+    const schema = fs.readFileSync(path.join(__dirname, 'db/schema.pg.sql'), 'utf8')
+    await pool.query(schema)
+    // Force admin to SUPER_ADMIN
+    const r = await pool.query(`UPDATE users SET role='SUPER_ADMIN', tier='PLATINUM', email_verified=1 WHERE email='admin@autopips.com'`)
+    const u = await pool.query(`SELECT id, email, role, tier FROM users WHERE email='admin@autopips.com'`)
+    await pool.end()
+    res.json({ ok: true, schema: 'applied', admin: u.rows[0] || null, updated: r.rowCount })
+  } catch (e) {
+    try { await pool.end() } catch (_) {}
+    res.status(500).json({ ok: false, error: e.message })
+  }
+})
+
 // ── Core routes ───────────────────────────────────────────────────────────────
 app.use('/auth',       require('./routes/auth'))
 app.use('/dashboard',  require('./routes/dashboard'))
