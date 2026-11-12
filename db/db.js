@@ -12,8 +12,14 @@
 
 const { Pool } = require('pg')
 
+const _rawUrl = process.env.DATABASE_URL || ''
+console.log('[db] url_has_channel_binding:', _rawUrl.includes('channel_binding'), '| host:', _rawUrl.replace(/^[^@]*@/, '').split(/[/?]/)[0])
+
+// Strip channel_binding param which breaks pg-connection-string hostname parsing
+const _cleanUrl = _rawUrl.replace(/[&?]channel_binding=[^&]*/g, '')
+
 const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
+  connectionString: _cleanUrl,
   ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : undefined,
   max: 10,
 })
