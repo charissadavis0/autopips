@@ -15,10 +15,10 @@
     <div class="page-header">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;width:100%">
         <div>
-          <h1 class="page-title">Overview</h1>
-          <p class="page-subtitle">Welcome back, <%= user.name ? user.name.split(' ')[0] : user.email %></p>
+          <h1 class="page-title" data-i18n="dash-overview">Overview</h1>
+          <p class="page-subtitle"><span data-i18n="dash-welcome">Welcome back</span>, <%= user.name ? user.name.split(' ')[0] : user.email %></p>
         </div>
-        <a href="/business/launch" class="btn btn-primary btn-sm">+ Launch Business</a>
+        <a href="/business/launch" class="btn btn-primary btn-sm" data-i18n="dash-launch-btn">+ Launch Business</a>
       </div>
     </div>
     <div class="page-body">
@@ -27,15 +27,15 @@
       <!-- Wallet balances -->
       <div class="balance-strip mb-6">
         <div class="balance-item">
-          <div class="balance-label">Available Balance</div>
+          <div class="balance-label" data-i18n="dash-bal-available">Available Balance</div>
           <div class="balance-amount">$<%= balances.available %></div>
         </div>
         <div class="balance-item">
-          <div class="balance-label">Pending</div>
+          <div class="balance-label" data-i18n="dash-bal-pending">Pending</div>
           <div class="balance-amount pending">$<%= balances.pending %></div>
         </div>
         <div class="balance-item">
-          <div class="balance-label">AI Credits</div>
+          <div class="balance-label" data-i18n="dash-bal-credits">AI Credits</div>
           <div class="balance-amount credits">$<%= balances.aiCredits %></div>
         </div>
       </div>
@@ -47,22 +47,22 @@
           <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
             <span style="font-size:1.5rem">&#9889;</span>
             <div>
-              <div style="font-size:1rem;font-weight:700;color:#fff">Get your business started in 4 steps</div>
-              <div style="font-size:.8125rem;color:var(--text2)">Complete the steps below to launch your first dropshipping store.</div>
+              <div style="font-size:1rem;font-weight:700;color:#fff" data-i18n="dash-setup-title">Get your business started in 4 steps</div>
+              <div style="font-size:.8125rem;color:var(--text2)" data-i18n="dash-setup-sub">Complete the steps below to launch your first dropshipping store.</div>
             </div>
           </div>
           <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px">
             <a href="/strategies" class="setup-step">
-              <div class="setup-step-num">1</div><div class="setup-step-text">Choose Strategy</div><div class="setup-step-status">&#8594;</div>
+              <div class="setup-step-num">1</div><div class="setup-step-text" data-i18n="dash-step1">Choose Strategy</div><div class="setup-step-status">&#8594;</div>
             </a>
             <a href="/autopips" class="setup-step">
-              <div class="setup-step-num">2</div><div class="setup-step-text">Add Products</div><div class="setup-step-status">&#8594;</div>
+              <div class="setup-step-num">2</div><div class="setup-step-text" data-i18n="dash-step2">Add Products</div><div class="setup-step-status">&#8594;</div>
             </a>
             <a href="/agents" class="setup-step">
-              <div class="setup-step-num">3</div><div class="setup-step-text">Hire Agent</div><div class="setup-step-status">&#8594;</div>
+              <div class="setup-step-num">3</div><div class="setup-step-text" data-i18n="dash-step3">Hire Agent</div><div class="setup-step-status">&#8594;</div>
             </a>
             <a href="/wallet?tab=deposit" class="setup-step">
-              <div class="setup-step-num">4</div><div class="setup-step-text">Fund Wallet</div><div class="setup-step-status">&#8594;</div>
+              <div class="setup-step-num">4</div><div class="setup-step-text" data-i18n="dash-step4">Fund Wallet</div><div class="setup-step-status">&#8594;</div>
             </a>
           </div>
         </div>
@@ -71,28 +71,28 @@
 
       <!-- Quick actions -->
       <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:24px">
-        <a href="/autopips" class="btn btn-outline btn-sm">&#128269; Discover Products</a>
-        <a href="/studio/video" class="btn btn-outline btn-sm">&#127916; AI Video</a>
-        <a href="/agents" class="btn btn-outline btn-sm">&#128100; Find Agent</a>
-        <a href="/wallet?tab=deposit" class="btn btn-gold btn-sm">+ Deposit</a>
+        <a href="/autopips" class="btn btn-outline btn-sm" data-i18n="dash-qa-products">&#128269; Discover Products</a>
+        <a href="/studio/video" class="btn btn-outline btn-sm" data-i18n="dash-qa-video">&#127916; AI Video</a>
+        <a href="/agents" class="btn btn-outline btn-sm" data-i18n="dash-qa-agent">&#128100; Find Agent</a>
+        <a href="/wallet?tab=deposit" class="btn btn-gold btn-sm" data-i18n="dash-qa-deposit">+ Deposit</a>
       </div>
 
       <!-- Stats -->
       <div class="grid-4 mb-6">
         <div class="stat-card">
-          <div class="stat-label">Active Stores</div>
+          <div class="stat-label" data-i18n="dash-stat-stores">Active Stores</div>
           <div class="stat-value"><%= businesses.length %></div>
         </div>
         <div class="stat-card">
-          <div class="stat-label">Products in Store</div>
+          <div class="stat-label" data-i18n="dash-stat-products">Products in Store</div>
           <div class="stat-value"><%= myProducts %></div>
         </div>
         <div class="stat-card">
-          <div class="stat-label">Active Agents</div>
+          <div class="stat-label" data-i18n="dash-stat-agents">Active Agents</div>
           <div class="stat-value" style="color:var(--green)"><%= myAgents.length %></div>
         </div>
         <div class="stat-card">
-          <div class="stat-label">Pending Tasks</div>
+          <div class="stat-label" data-i18n="dash-stat-tasks">Pending Tasks</div>
           <div class="stat-value" style="color:<%= pendingTasks > 0 ? 'var(--gold)' : 'var(--text)' %>"><%= pendingTasks %></div>
         </div>
       </div>
@@ -101,13 +101,13 @@
         <!-- Active businesses -->
         <div class="card">
           <div class="card-header">
-            <span class="card-title">My Stores</span>
-            <a href="/business" class="btn btn-ghost btn-sm">View all</a>
+            <span class="card-title" data-i18n="dash-card-stores">My Stores</span>
+            <a href="/business" class="btn btn-ghost btn-sm" data-i18n="dash-view-all">View all</a>
           </div>
           <% if (businesses.length === 0) { %>
           <div class="empty-state">
             <div class="icon">&#128218;</div>
-            <p>No stores yet. <a href="/business/launch" class="auth-link">Launch your first</a></p>
+            <p><span data-i18n="dash-empty-stores">No stores yet.</span> <a href="/business/launch" class="auth-link" data-i18n="dash-launch-first">Launch your first</a></p>
           </div>
           <% } else { %>
           <div>
@@ -127,13 +127,13 @@
         <!-- Active agents -->
         <div class="card">
           <div class="card-header">
-            <span class="card-title">My Agents</span>
-            <a href="/agents" class="btn btn-ghost btn-sm">Find agents</a>
+            <span class="card-title" data-i18n="dash-card-agents">My Agents</span>
+            <a href="/agents" class="btn btn-ghost btn-sm" data-i18n="dash-find-agents">Find agents</a>
           </div>
           <% if (myAgents.length === 0) { %>
           <div class="empty-state">
             <div class="icon">&#128100;</div>
-            <p>No agents hired. <a href="/agents" class="auth-link">Browse agents</a></p>
+            <p><span data-i18n="dash-empty-agents">No agents hired.</span> <a href="/agents" class="auth-link" data-i18n="dash-browse-agents">Browse agents</a></p>
           </div>
           <% } else { %>
           <div>
@@ -154,18 +154,18 @@
       <!-- Recent transactions -->
       <div class="card mt-6">
         <div class="card-header">
-          <span class="card-title">Recent Wallet Activity</span>
-          <a href="/wallet?tab=history" class="btn btn-ghost btn-sm">View all</a>
+          <span class="card-title" data-i18n="dash-card-wallet">Recent Wallet Activity</span>
+          <a href="/wallet?tab=history" class="btn btn-ghost btn-sm" data-i18n="dash-view-all">View all</a>
         </div>
         <% if (recentTxns.length === 0) { %>
         <div class="empty-state">
           <div class="icon">&#128683;</div>
-          <p>No transactions yet. <a href="/wallet?tab=deposit" class="auth-link">Make your first deposit</a></p>
+          <p><span data-i18n="dash-empty-txns">No transactions yet.</span> <a href="/wallet?tab=deposit" class="auth-link" data-i18n="dash-first-deposit">Make your first deposit</a></p>
         </div>
         <% } else { %>
         <div class="table-wrap">
           <table>
-            <thead><tr><th>Type</th><th>Amount</th><th>Balance</th><th>Date</th></tr></thead>
+            <thead><tr><th data-i18n="dash-th-type">Type</th><th data-i18n="dash-th-amount">Amount</th><th data-i18n="dash-th-balance">Balance</th><th data-i18n="dash-th-date">Date</th></tr></thead>
             <tbody>
               <% recentTxns.forEach(t => { %>
               <tr>
