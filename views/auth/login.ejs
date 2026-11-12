@@ -11,24 +11,25 @@
 <div class="auth-wrap">
   <div class="auth-card">
     <div class="auth-logo">AutoPips</div>
-    <h2 class="auth-title">Welcome back</h2>
-    <p class="auth-sub">Sign in to your account to continue</p>
+    <h2 class="auth-title" data-i18n="auth-signin-title">Welcome back</h2>
+    <p class="auth-sub" data-i18n="auth-signin-sub">Sign in to your account to continue</p>
     <%- include('../partials/flash', { flash }) %>
     <form method="POST" action="/auth/login">
       <div class="form-group">
-        <label class="form-label">Email address</label>
+        <label class="form-label" data-i18n="auth-email">Email address</label>
         <input class="form-input" type="email" name="email" required autofocus value="<%= typeof email !== 'undefined' ? email : '' %>">
       </div>
       <div class="form-group">
         <label class="form-label" style="display:flex;justify-content:space-between;align-items:center">
-          Password <a href="/auth/forgot-password" class="auth-link" style="font-size:.8rem;font-weight:500">Forgot password?</a>
+          <span data-i18n="auth-password">Password</span>
+          <a href="/auth/forgot-password" class="auth-link" style="font-size:.8rem;font-weight:500" data-i18n="auth-forgot">Forgot password?</a>
         </label>
         <input class="form-input" type="password" name="password" required>
       </div>
-      <button type="submit" class="btn btn-primary w-full" style="margin-top:4px">Sign In &rarr;</button>
+      <button type="submit" class="btn btn-primary w-full" style="margin-top:4px" data-i18n="auth-signin-btn">Sign In →</button>
     </form>
     <p class="text-center mt-4 text-muted" style="font-size:.875rem">
-      No account? <a href="/auth/signup" class="auth-link">Create one free</a>
+      <span data-i18n="auth-no-account">No account?</span> <a href="/auth/signup" class="auth-link" data-i18n="auth-create-free">Create one free</a>
     </p>
     <p style="text-align:center;margin-top:24px;font-size:.75rem;color:var(--text3)">
       By signing in you agree to our <a href="#" style="color:var(--text3);text-decoration:underline">Terms</a> and <a href="#" style="color:var(--text3);text-decoration:underline">Privacy Policy</a>.

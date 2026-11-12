@@ -1,3 +1,10 @@
+// Load i18n on every page (all pages load main.js)
+if (typeof window.applyLang === 'undefined') {
+  var s = document.createElement('script')
+  s.src = '/js/i18n.js'
+  document.head.appendChild(s)
+}
+
 // Tabs
 document.querySelectorAll('.tab').forEach(btn => {
   btn.addEventListener('click', () => {

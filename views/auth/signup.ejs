@@ -11,30 +11,30 @@
 <div class="auth-wrap">
   <div class="auth-card">
     <div class="auth-logo">AutoPips</div>
-    <h2 class="auth-title">Create your account</h2>
-    <p class="auth-sub">Start your dropshipping journey today</p>
+    <h2 class="auth-title" data-i18n="auth-signup-title">Create your account</h2>
+    <p class="auth-sub" data-i18n="auth-signup-sub">Start your dropshipping journey today</p>
     <%- include('../partials/flash', { flash }) %>
     <form method="POST" action="/auth/signup">
       <div class="form-group">
-        <label class="form-label">Full name</label>
+        <label class="form-label" data-i18n="auth-name">Full name</label>
         <input class="form-input" type="text" name="name" required autofocus value="<%= typeof name !== 'undefined' ? name : '' %>">
       </div>
       <div class="form-group">
-        <label class="form-label">Email address</label>
+        <label class="form-label" data-i18n="auth-email">Email address</label>
         <input class="form-input" type="email" name="email" required value="<%= typeof email !== 'undefined' ? email : '' %>">
       </div>
       <div class="form-group">
-        <label class="form-label">Password</label>
+        <label class="form-label" data-i18n="auth-password">Password</label>
         <input class="form-input" type="password" name="password" required minlength="8">
         <p class="form-hint">At least 8 characters</p>
       </div>
       <div class="alert alert-info" style="font-size:.8rem;margin-bottom:18px">
         AutoPips does not guarantee earnings. Results depend on your effort and market conditions.
       </div>
-      <button type="submit" class="btn btn-primary w-full">Create Account &rarr;</button>
+      <button type="submit" class="btn btn-primary w-full" data-i18n="auth-signup-btn">Create Account →</button>
     </form>
     <p class="text-center mt-4 text-muted" style="font-size:.875rem">
-      Already have an account? <a href="/auth/login" class="auth-link">Sign in</a>
+      <span data-i18n="auth-have-account">Already have an account?</span> <a href="/auth/login" class="auth-link" data-i18n="auth-signin-link">Sign in</a>
     </p>
   </div>
 </div>
