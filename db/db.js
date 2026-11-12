@@ -12,15 +12,13 @@
 
 const { Pool } = require('pg')
 
-// Parse DATABASE_URL using WHATWG URL to bypass pg-connection-string entirely
+// Parse DATABASE_URL with WHATWG URL to bypass pg-connection-string issues
 function pgParamsFromUrl(raw) {
-  const len = (raw || '').length
-  const preview = (raw || '').slice(0, 30).replace(/:[^:@]+@/, ':***@')
-  console.log('[db] DATABASE_URL len:', len, '| preview:', preview)
   if (!raw) return {}
+  // Strip BOM and whitespace that can corrupt the value when set via CLI
+  const clean = raw.replace(/^﻿/, '').trim()
   try {
-    const u = new URL(raw)
-    console.log('[db] URL parsed host:', u.hostname)
+    const u = new URL(clean)
     return {
       host: u.hostname,
       port: parseInt(u.port) || 5432,
@@ -29,8 +27,7 @@ function pgParamsFromUrl(raw) {
       password: decodeURIComponent(u.password),
     }
   } catch (e) {
-    console.error('[db] URL parse failed:', e.message, '| raw preview:', preview)
-    return { connectionString: raw }
+    return { connectionString: clean }
   }
 }
 
