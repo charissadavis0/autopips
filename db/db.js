@@ -12,15 +12,28 @@
 
 const { Pool } = require('pg')
 
-const _rawUrl = process.env.DATABASE_URL || ''
-console.log('[db] url_has_channel_binding:', _rawUrl.includes('channel_binding'), '| host:', _rawUrl.replace(/^[^@]*@/, '').split(/[/?]/)[0])
-
-// Strip channel_binding param which breaks pg-connection-string hostname parsing
-const _cleanUrl = _rawUrl.replace(/[&?]channel_binding=[^&]*/g, '')
+// Parse DATABASE_URL using WHATWG URL to bypass pg-connection-string entirely
+function pgParamsFromUrl(raw) {
+  if (!raw) return {}
+  try {
+    const u = new URL(raw)
+    console.log('[db] URL parsed host:', u.hostname, '| port:', u.port || '(default)')
+    return {
+      host: u.hostname,
+      port: parseInt(u.port) || 5432,
+      database: decodeURIComponent(u.pathname.slice(1)),
+      user: decodeURIComponent(u.username),
+      password: decodeURIComponent(u.password),
+    }
+  } catch (e) {
+    console.error('[db] URL parse failed:', e.message, '| falling back to connectionString')
+    return { connectionString: raw }
+  }
+}
 
 const pool = new Pool({
-  connectionString: _cleanUrl,
-  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : undefined,
+  ...pgParamsFromUrl(process.env.DATABASE_URL || ''),
+  ssl: { rejectUnauthorized: false },
   max: 10,
 })
 
