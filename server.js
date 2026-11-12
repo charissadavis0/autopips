@@ -17,8 +17,9 @@ app.use(express.json())
 let sessionStore
 if (process.env.DATABASE_URL) {
   const pgSession = require('connect-pg-simple')(session)
+  const { pool } = require('./db/db')
   sessionStore = new pgSession({
-    conString: process.env.DATABASE_URL,
+    pool,
     tableName: 'user_sessions',
     createTableIfMissing: true,
   })

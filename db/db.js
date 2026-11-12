@@ -91,3 +91,4 @@ const db = {
 }
 
 module.exports = db
+module.exports.pool = pool
