@@ -16,9 +16,10 @@ if (process.env.DATABASE_URL) {
 }
 
 // ── Local dev: better-sqlite3 wrapped in Promises ───────────────────────────
-// Use a variable so Vercel's bundler does not statically include the native binary
-const sqlitePkg = 'better-sqlite3'
-const Database = require(sqlitePkg)
+let Database
+try { Database = require('better-sqlite3') } catch (e) {
+  throw new Error('better-sqlite3 not available. Set DATABASE_URL to use PostgreSQL.')
+}
 const path = require('path')
 const fs = require('fs')
 

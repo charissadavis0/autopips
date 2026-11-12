@@ -6,6 +6,7 @@
       "use": "@vercel/node",
       "config": {
         "maxDuration": 30,
+        "includeFiles": "**",
         "excludeFiles": "{node_modules/better-sqlite3/**,node_modules/connect-sqlite3/**}"
       }
     }

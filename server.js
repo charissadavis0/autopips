@@ -22,9 +22,13 @@ if (process.env.DATABASE_URL) {
     createTableIfMissing: true,
   })
 } else {
-  const sqliteStorePkg = 'connect-sqlite3'
-  const SQLiteStore = require(sqliteStorePkg)(session)
-  sessionStore = new SQLiteStore({ db: 'sessions.db', dir: path.join(__dirname, 'db') })
+  try {
+    const SQLiteStore = require('connect-sqlite3')(session)
+    sessionStore = new SQLiteStore({ db: 'sessions.db', dir: path.join(__dirname, 'db') })
+  } catch (e) {
+    console.error('[session] connect-sqlite3 unavailable, using memory store:', e.message)
+    sessionStore = undefined // express-session falls back to MemoryStore
+  }
 }
 
 app.use(session({
