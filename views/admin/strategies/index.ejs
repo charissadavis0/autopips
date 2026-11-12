@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Strategies — Admin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/main.css">
+</head>
+<body>
+<div class="app-layout">
+  <%- include('../../partials/sidebar', { user, path, pendingWithdrawals }) %>
+  <div class="main-content">
+  <%- include('../../partials/topbar', { user, balances: typeof balances !== 'undefined' ? balances : null, pageTitle: typeof pageTitle !== 'undefined' ? pageTitle : '' }) %>
+    <div class="page-header">
+      <div style="display:flex;justify-content:space-between;align-items:center;width:100%">
+        <div>
+          <h1 class="page-title">Strategy Management</h1>
+          <p class="page-subtitle">Manage published strategies in the marketplace</p>
+        </div>
+        <a href="/admin/strategies/new" class="btn btn-primary btn-sm">+ Add Strategy</a>
+      </div>
+    </div>
+    <div class="page-body">
+      <%- include('../../partials/flash', { flash }) %>
+
+      <form method="GET" action="/admin/strategies" class="card mb-6" style="padding:16px 20px">
+        <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end">
+          <div style="flex:1;min-width:160px">
+            <label class="form-label">Search</label>
+            <input type="text" name="q" value="<%= filters.q %>" class="form-input" placeholder="Strategy name or niche...">
+          </div>
+          <div style="min-width:140px">
+            <label class="form-label">Status</label>
+            <select name="status" class="form-input">
+              <option value="">All</option>
+              <option value="DRAFT" <%= filters.status==='DRAFT'?'selected':'' %>>Draft</option>
+              <option value="ACTIVE" <%= filters.status==='ACTIVE'?'selected':'' %>>Published</option>
+              <option value="ARCHIVED" <%= filters.status==='ARCHIVED'?'selected':'' %>>Archived</option>
+            </select>
+          </div>
+          <button type="submit" class="btn btn-outline btn-sm" style="align-self:flex-end">Filter</button>
+          <a href="/admin/strategies" class="btn btn-ghost btn-sm" style="align-self:flex-end">Clear</a>
+        </div>
+      </form>
+
+      <div class="card">
+        <% if (strategies.length === 0) { %>
+        <div class="empty-state">
+          <svg width="40" height="40" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" style="margin:0 auto 12px;display:block;color:var(--text3)"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+          <p>No strategies yet. <a href="/admin/strategies/new" class="auth-link">Add the first one</a></p>
+        </div>
+        <% } else { %>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>Strategy</th><th>Niche</th><th>Difficulty</th><th>Budget</th><th>Copied</th><th>Status</th><th>Featured</th><th></th></tr>
+            </thead>
+            <tbody>
+              <% strategies.forEach(s => { %>
+              <tr>
+                <td>
+                  <div style="font-weight:600;color:#fff;font-size:.875rem"><%= s.name %></div>
+                  <div style="font-size:.75rem;color:var(--text3)"><%= s.target_country || 'Global' %></div>
+                </td>
+                <td><span class="pill" style="background:rgba(0,212,255,.1);color:var(--cyan)"><%= s.niche %></span></td>
+                <td>
+                  <span class="pill pill-<%= s.difficulty.toLowerCase() === 'beginner' ? 'active' : s.difficulty.toLowerCase() === 'intermediate' ? 'pending' : 'inactive' %>">
+                    <%= s.difficulty %>
+                  </span>
+                </td>
+                <td class="tabular-nums">$<%= s.estimated_budget || '—' %></td>
+                <td class="tabular-nums"><%= s.times_copied %></td>
+                <td>
+                  <span class="pill pill-<%= s.status==='ACTIVE'?'active':s.status==='DRAFT'?'pending':'inactive' %>">
+                    <%= s.status === 'ACTIVE' ? 'Published' : s.status %>
+                  </span>
+                </td>
+                <td><% if (s.is_featured) { %><span class="pill" style="background:rgba(255,184,0,.1);color:var(--gold)">Featured</span><% } %></td>
+                <td style="white-space:nowrap">
+                  <a href="/admin/strategies/<%= s.id %>/edit" class="btn btn-ghost btn-sm">Edit</a>
+                  <form method="POST" action="/admin/strategies/<%= s.id %>/delete" style="display:inline" onsubmit="return confirm('Delete this strategy?')">
+                    <button class="btn btn-ghost btn-sm" style="color:var(--red)">Delete</button>
+                  </form>
+                </td>
+              </tr>
+              <% }) %>
+            </tbody>
+          </table>
+        </div>
+        <% } %>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="/js/main.js"></script>
+</body>
+</html>

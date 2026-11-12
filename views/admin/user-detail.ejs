@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title><%= targetUser.email %> — Admin — AutoPips</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/main.css">
+</head>
+<body>
+<div class="app-layout">
+  <%- include('../partials/sidebar', { user, path, pendingWithdrawals }) %>
+  <div class="main-content">
+  <%- include('../partials/topbar', { user, balances: typeof balances !== 'undefined' ? balances : null, pageTitle: typeof pageTitle !== 'undefined' ? pageTitle : '' }) %>
+    <div class="page-header">
+      <a href="/admin/users" style="color:var(--text-muted);font-size:.875rem">&larr; Back to users</a>
+      <h1 class="page-title mt-2"><%= targetUser.name || targetUser.email %></h1>
+      <div class="flex gap-2 wrap mt-2">
+        <span class="pill pill-<%= targetUser.tier.toLowerCase() %>"><%= targetUser.tier %></span>
+        <span class="pill pill-<%= targetUser.kyc_level === 'FULL' ? 'approved' : 'review' %>">KYC: <%= targetUser.kyc_level %></span>
+        <% if (targetUser.suspended) { %><span class="pill pill-rejected">Suspended</span><% } %>
+        <% if (targetUser.frozen) { %><span class="pill pill-review">Frozen</span><% } %>
+        <% if (!targetUser.suspended && !targetUser.frozen) { %><span class="pill pill-approved">Active</span><% } %>
+      </div>
+    </div>
+    <div class="page-body">
+      <%- include('../partials/flash', { flash }) %>
+      <div style="display:grid;grid-template-columns:1fr 320px;gap:24px">
+
+        <!-- Left column -->
+        <div>
+          <!-- Balances -->
+          <div class="balance-strip mb-6">
+            <div class="balance-item"><div class="balance-label">Available</div><div class="balance-amount">$<%= balances.available %></div></div>
+            <div class="balance-item"><div class="balance-label">Pending</div><div class="balance-amount pending">$<%= balances.pending %></div></div>
+            <div class="balance-item"><div class="balance-label">AI Credits</div><div class="balance-amount" style="color:var(--cyan)">$<%= balances.aiCredits %></div></div>
+            <div class="balance-item"><div class="balance-label">Total Deposited</div><div class="balance-amount" style="color:var(--green-mid)">$<%= totalDeposited %></div></div>
+            <div class="balance-item"><div class="balance-label">Lifetime Volume</div><div class="balance-amount">$<%= parseFloat(targetUser.lifetime_volume||0).toFixed(2) %></div></div>
+          </div>
+
+          <!-- Adjust balance / AI Credits -->
+          <div class="card mb-6">
+            <div class="card-header"><span class="card-title">Adjust Balance or AI Credits</span></div>
+            <div class="card-body">
+              <form method="POST" action="/admin/users/<%= targetUser.id %>/adjust">
+                <div class="grid-2">
+                  <div class="form-group">
+                    <label class="form-label">Balance bucket</label>
+                    <select class="form-select" name="balance" id="balance-select">
+                      <option value="AVAILABLE">Main Wallet ($<%= balances.available %>)</option>
+                      <option value="PENDING">Pending ($<%= balances.pending %>)</option>
+                      <option value="AI_CREDITS">AI Credits ($<%= balances.aiCredits %>)</option>
+                    </select>
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">Amount (negative to deduct)</label>
+                    <input class="form-input" type="number" name="amount" step="0.01" required placeholder="e.g. 50 or -25">
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Reason (required)</label>
+                  <input class="form-input" type="text" name="reason" required placeholder="Explain the reason — recorded in audit log">
+                </div>
+                <div class="alert alert-warn mb-4" style="font-size:.8125rem">
+                  AI Credits and cash balances are separate. AI Credits cannot be withdrawn. This action is recorded in the audit log.
+                </div>
+                <input type="hidden" name="type" value="BALANCE">
+                <button class="btn btn-gold">Apply Adjustment</button>
+              </form>
+            </div>
+          </div>
+
+          <!-- Deposit history -->
+          <div class="card mb-4">
+            <div class="card-header"><span class="card-title">Deposit History</span></div>
+            <% if (!deposits || deposits.length === 0) { %>
+            <div class="empty-state"><p>No deposits yet.</p></div>
+            <% } else { %>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>Date</th><th>Coin/Network</th><th>Amount</th><th>Status</th><th>Note</th></tr></thead>
+                <tbody>
+                  <% deposits.forEach(d => { %>
+                  <tr>
+                    <td class="text-muted"><%= new Date(d.created_at).toLocaleDateString() %></td>
+                    <td><%= d.coin %><span class="text-muted text-xs"> / <%= d.network %></span></td>
+                    <td class="tabular-nums">$<%= parseFloat(d.amount||0).toFixed(2) %></td>
+                    <td><span class="pill pill-<%= d.status.toLowerCase() %>"><%= d.status %></span></td>
+                    <td class="text-muted" style="font-size:.8rem"><%= d.admin_note||'—' %></td>
+                  </tr>
+                  <% }) %>
+                </tbody>
+              </table>
+            </div>
+            <% } %>
+          </div>
+
+          <!-- Withdrawal history -->
+          <div class="card mb-6">
+            <div class="card-header"><span class="card-title">Withdrawal History</span></div>
+            <% if (withdrawals.length === 0) { %>
+            <div class="empty-state"><p>No withdrawals yet.</p></div>
+            <% } else { %>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>Date</th><th>Coin</th><th>Amount</th><th>Status</th></tr></thead>
+                <tbody>
+                  <% withdrawals.forEach(w => { %>
+                  <tr>
+                    <td class="text-muted"><%= new Date(w.created_at).toLocaleDateString() %></td>
+                    <td><%= w.coin %></td>
+                    <td class="tabular-nums">$<%= parseFloat(w.amount).toFixed(2) %></td>
+                    <td><span class="pill pill-<%= w.status.toLowerCase() %>"><%= w.status %></span></td>
+                  </tr>
+                  <% }) %>
+                </tbody>
+              </table>
+            </div>
+            <% } %>
+          </div>
+        </div>
+
+        <!-- Right column: quick actions -->
+        <div>
+          <div class="card mb-4">
+            <div class="card-header"><span class="card-title">Quick Actions</span></div>
+            <div class="card-body" style="display:flex;flex-direction:column;gap:10px">
+              <div class="card-sm" style="background:var(--bg-muted);border:none">
+                <div class="info-row"><span class="info-key">Member since</span><span class="info-val"><%= new Date(targetUser.created_at).toLocaleDateString() %></span></div>
+                <div class="info-row"><span class="info-key">Role</span><span class="info-val"><%= targetUser.role %></span></div>
+              </div>
+
+              <form method="POST" action="/admin/users/<%= targetUser.id %>/action">
+                <input type="hidden" name="action" value="<%= targetUser.suspended ? 'UNSUSPEND' : 'SUSPEND' %>">
+                <button class="btn <%= targetUser.suspended ? 'btn-outline' : 'btn-danger' %> w-full btn-sm">
+                  <%= targetUser.suspended ? 'Unsuspend Account' : 'Suspend Account' %>
+                </button>
+              </form>
+              <form method="POST" action="/admin/users/<%= targetUser.id %>/action">
+                <input type="hidden" name="action" value="<%= targetUser.frozen ? 'UNFREEZE' : 'FREEZE' %>">
+                <button class="btn btn-outline w-full btn-sm"><%= targetUser.frozen ? 'Unfreeze Account' : 'Freeze Account' %></button>
+              </form>
+              <form method="POST" action="/admin/users/<%= targetUser.id %>/action">
+                <input type="hidden" name="action" value="RESET_2FA">
+                <button class="btn btn-outline w-full btn-sm" data-confirm="Reset 2FA for this user?">Reset 2FA</button>
+              </form>
+
+              <div class="divider"></div>
+              <p class="text-muted text-xs">Change tier</p>
+              <div class="flex gap-2">
+                <% ['STANDARD','GOLD','PLATINUM'].forEach(t => { %>
+                <form method="POST" action="/admin/users/<%= targetUser.id %>/action" style="flex:1">
+                  <input type="hidden" name="action" value="SET_TIER">
+                  <input type="hidden" name="tier" value="<%= t %>">
+                  <button class="btn btn-sm w-full <%= targetUser.tier === t ? 'btn-gold' : 'btn-outline' %>"><%= t.slice(0,1)+t.slice(1).toLowerCase() %></button>
+                </form>
+                <% }) %>
+              </div>
+
+              <div class="divider"></div>
+              <a href="/admin/audit?userId=<%= targetUser.id %>" class="btn btn-ghost btn-sm w-full">View Audit Log</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="/js/main.js"></script>
+</body>
+</html>

@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Agent Management — Admin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/main.css">
+</head>
+<body>
+<div class="app-layout">
+  <%- include('../../partials/sidebar', { user, path, pendingWithdrawals }) %>
+  <div class="main-content">
+  <%- include('../../partials/topbar', { user, balances: typeof balances !== 'undefined' ? balances : null, pageTitle: typeof pageTitle !== 'undefined' ? pageTitle : '' }) %>
+    <div class="page-header">
+      <div style="display:flex;justify-content:space-between;align-items:center;width:100%">
+        <div>
+          <h1 class="page-title">Agent Management</h1>
+          <p class="page-subtitle">Manage platform agents and their assignments</p>
+        </div>
+        <a href="/admin/agents/new" class="btn btn-primary btn-sm">+ Add Agent</a>
+      </div>
+    </div>
+    <div class="page-body">
+      <%- include('../../partials/flash', { flash }) %>
+
+      <form method="GET" action="/admin/agents" class="card mb-6" style="padding:16px 20px">
+        <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end">
+          <div style="flex:1;min-width:160px">
+            <label class="form-label">Search</label>
+            <input type="text" name="q" value="<%= filters.q %>" class="form-input" placeholder="Agent name...">
+          </div>
+          <div style="min-width:140px">
+            <label class="form-label">Status</label>
+            <select name="status" class="form-input">
+              <option value="">All</option>
+              <option value="ACTIVE" <%= filters.status==='ACTIVE'?'selected':'' %>>Active</option>
+              <option value="SUSPENDED" <%= filters.status==='SUSPENDED'?'selected':'' %>>Suspended</option>
+            </select>
+          </div>
+          <button type="submit" class="btn btn-outline btn-sm" style="align-self:flex-end">Filter</button>
+          <a href="/admin/agents" class="btn btn-ghost btn-sm" style="align-self:flex-end">Clear</a>
+        </div>
+      </form>
+
+      <div class="card">
+        <% if (agents.length === 0) { %>
+        <div class="empty-state">
+          <svg width="40" height="40" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" style="margin:0 auto 12px;display:block;color:var(--text3)"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+          <p>No agents yet. <a href="/admin/agents/new" class="auth-link">Add the first one</a></p>
+        </div>
+        <% } else { %>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>Agent</th><th>Base Fee</th><th>Video Rate</th><th>Ad Rate</th><th>Clients</th><th>Verified</th><th>Status</th><th></th></tr>
+            </thead>
+            <tbody>
+              <% agents.forEach(a => { %>
+              <tr>
+                <td>
+                  <div style="display:flex;align-items:center;gap:10px">
+                    <div class="agent-avatar" style="width:34px;height:34px;font-size:.75rem;flex-shrink:0"><%= a.avatar_initials %></div>
+                    <div>
+                      <div style="font-weight:600;color:#fff;font-size:.875rem"><%= a.name %></div>
+                      <div style="font-size:.75rem;color:var(--text3)"><%= a.bio ? a.bio.substring(0,50) + (a.bio.length>50?'…':'') : 'No bio' %></div>
+                    </div>
+                  </div>
+                </td>
+                <td class="tabular-nums">$<%= a.base_fee %>/<%= a.fee_period.toLowerCase() %></td>
+                <td class="tabular-nums">$<%= a.video_rate %>/video</td>
+                <td class="tabular-nums">$<%= a.ad_management_rate %>/mo</td>
+                <td class="tabular-nums"><%= a.active_clients %></td>
+                <td>
+                  <% if (a.is_verified) { %>
+                  <span class="pill" style="background:rgba(0,230,118,.1);color:var(--green)">
+                    <svg width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" style="margin-right:3px"><polyline points="20 6 9 17 4 12"/></svg>Verified</span>
+                  <% } else { %><span class="pill" style="background:rgba(255,184,0,.1);color:var(--gold)">Unverified</span><% } %>
+                </td>
+                <td><span class="pill pill-<%= a.status==='ACTIVE'?'active':'inactive' %>"><%= a.status %></span></td>
+                <td style="white-space:nowrap">
+                  <a href="/admin/agents/<%= a.id %>/edit" class="btn btn-ghost btn-sm">Edit</a>
+                  <% if (a.status === 'ACTIVE') { %>
+                  <form method="POST" action="/admin/agents/<%= a.id %>/suspend" style="display:inline" onsubmit="return confirm('Suspend this agent?')">
+                    <button class="btn btn-ghost btn-sm" style="color:var(--gold)">Suspend</button>
+                  </form>
+                  <% } else { %>
+                  <form method="POST" action="/admin/agents/<%= a.id %>/activate" style="display:inline">
+                    <button class="btn btn-ghost btn-sm" style="color:var(--green)">Activate</button>
+                  </form>
+                  <% } %>
+                  <form method="POST" action="/admin/agents/<%= a.id %>/delete" style="display:inline" onsubmit="return confirm('Remove this agent?')">
+                    <button class="btn btn-ghost btn-sm" style="color:var(--red)">Remove</button>
+                  </form>
+                </td>
+              </tr>
+              <% }) %>
+            </tbody>
+          </table>
+        </div>
+        <% } %>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="/js/main.js"></script>
+</body>
+</html>

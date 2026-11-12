@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Experts — Admin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/main.css">
+</head>
+<body>
+<div class="app-layout">
+  <%- include('../../partials/sidebar', { user, path, pendingWithdrawals }) %>
+  <div class="main-content">
+  <%- include('../../partials/topbar', { user, balances: typeof balances !== 'undefined' ? balances : null, pageTitle: typeof pageTitle !== 'undefined' ? pageTitle : '' }) %>
+    <div class="page-header">
+      <div style="display:flex;justify-content:space-between;align-items:center;width:100%">
+        <div>
+          <h1 class="page-title">Experts</h1>
+          <p class="page-subtitle">Manage verified dropshipping experts and their profiles</p>
+        </div>
+        <a href="/admin/experts/new" class="btn btn-primary btn-sm">+ Add Expert</a>
+      </div>
+    </div>
+    <div class="page-body">
+      <%- include('../../partials/flash', { flash }) %>
+
+      <form method="GET" class="card mb-6" style="padding:16px 20px">
+        <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end">
+          <div style="flex:1;min-width:160px">
+            <label class="form-label">Search</label>
+            <input type="text" name="q" value="<%= filters.q %>" class="form-input" placeholder="Expert name...">
+          </div>
+          <div style="min-width:140px">
+            <label class="form-label">Status</label>
+            <select name="status" class="form-input">
+              <option value="">All</option>
+              <option value="DRAFT" <%= filters.status==='DRAFT'?'selected':'' %>>Draft</option>
+              <option value="PUBLISHED" <%= filters.status==='PUBLISHED'?'selected':'' %>>Published</option>
+              <option value="SUSPENDED" <%= filters.status==='SUSPENDED'?'selected':'' %>>Suspended</option>
+            </select>
+          </div>
+          <button type="submit" class="btn btn-outline btn-sm" style="align-self:flex-end">Filter</button>
+        </div>
+      </form>
+
+      <div class="card">
+        <% if (experts.length === 0) { %>
+        <div class="empty-state">
+          <svg width="40" height="40" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" style="margin:0 auto 12px;display:block;color:var(--text3)"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+          <p>No experts yet. <a href="/admin/experts/new" class="auth-link">Add the first one</a></p>
+        </div>
+        <% } else { %>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Expert</th><th>Country</th><th>Experience</th><th>Strategies</th><th>Verified</th><th>Status</th><th></th></tr></thead>
+            <tbody>
+              <% experts.forEach(e => { %>
+              <% const stratCount = (() => { try { return require('../../../db/database').prepare("SELECT COUNT(*) as c FROM strategies WHERE expert_id=?").get(e.id).c } catch(_) { return 0 } })() %>
+              <tr>
+                <td>
+                  <div style="display:flex;align-items:center;gap:10px">
+                    <% if (e.profile_image) { %>
+                    <img src="<%= e.profile_image %>" alt="<%= e.name %>" style="width:36px;height:36px;border-radius:50%;object-fit:cover;flex-shrink:0">
+                    <% } else { %>
+                    <div style="width:36px;height:36px;border-radius:50%;background:var(--grad);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.75rem;color:#000;flex-shrink:0"><%= e.name.charAt(0) %></div>
+                    <% } %>
+                    <div>
+                      <div style="font-weight:600;color:#fff;font-size:.875rem"><%= e.name %></div>
+                      <div style="font-size:.75rem;color:var(--text3)"><%= e.bio ? e.bio.substring(0,50)+'…' : 'No bio' %></div>
+                    </div>
+                  </div>
+                </td>
+                <td><%= e.country || '—' %></td>
+                <td><%= e.years_experience %> yr<%= e.years_experience !== 1 ? 's' : '' %></td>
+                <td class="tabular-nums"><%= stratCount %></td>
+                <td>
+                  <% if (e.is_verified) { %>
+                  <span class="pill" style="background:rgba(0,230,118,.1);color:var(--green)">Verified</span>
+                  <% } else { %>
+                  <span class="pill" style="background:rgba(255,184,0,.1);color:var(--gold)">Pending</span>
+                  <% } %>
+                </td>
+                <td><span class="pill pill-<%= e.status==='PUBLISHED'?'active':e.status==='DRAFT'?'pending':'inactive' %>"><%= e.status %></span></td>
+                <td style="white-space:nowrap">
+                  <a href="/admin/experts/<%= e.id %>/edit" class="btn btn-ghost btn-sm">Edit</a>
+                  <form method="POST" action="/admin/experts/<%= e.id %>/delete" style="display:inline" onsubmit="return confirm('Remove this expert?')">
+                    <button class="btn btn-ghost btn-sm" style="color:var(--red)">Remove</button>
+                  </form>
+                </td>
+              </tr>
+              <% }) %>
+            </tbody>
+          </table>
+        </div>
+        <% } %>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="/js/main.js"></script>
+</body>
+</html>

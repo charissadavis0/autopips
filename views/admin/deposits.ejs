@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Deposit Requests — Admin — AutoPips</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/main.css">
+</head>
+<body>
+<div class="app-layout">
+  <%- include('../partials/sidebar', { user, path, pendingWithdrawals }) %>
+  <div class="main-content">
+  <%- include('../partials/topbar', { user, balances: typeof balances !== 'undefined' ? balances : null, pageTitle: '' }) %>
+    <div class="page-header">
+      <h1 class="page-title">Deposit Requests</h1>
+      <p class="page-subtitle"><%= total %> records &middot; status: <%= currentStatus %></p>
+    </div>
+    <div class="page-body">
+      <%- include('../partials/flash', { flash }) %>
+
+      <!-- Status filter tabs -->
+      <div class="tabs mb-6" style="width:fit-content">
+        <% ['PENDING','UNDER_REVIEW','ON_HOLD','APPROVED','REJECTED'].forEach(s => { %>
+        <a href="/admin/deposits?status=<%= s %>" class="tab <%= currentStatus === s ? 'active' : '' %>" style="text-decoration:none"><%= s.replace('_',' ') %></a>
+        <% }) %>
+      </div>
+
+      <div class="card">
+        <% if (deposits.length === 0) { %>
+        <div class="empty-state"><div class="icon">&#10003;</div><p>No <%= currentStatus.toLowerCase() %> deposits.</p></div>
+        <% } else { %>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>User</th><th>Amount</th><th>Coin/Network</th><th>TX Hash</th><th>Date</th><th>Notes</th><th>Actions</th></tr>
+            </thead>
+            <tbody>
+              <% deposits.forEach(d => { %>
+              <tr>
+                <td>
+                  <div><strong><%= d.user_name || d.user_email %></strong></div>
+                  <div class="text-muted text-xs"><%= d.user_email %></div>
+                  <span class="pill pill-<%= (d.user_tier||'free').toLowerCase() %>" style="font-size:10px"><%= d.user_tier %></span>
+                </td>
+                <td class="tabular-nums font-semibold">$<%= parseFloat(d.amount||0).toFixed(2) %></td>
+                <td><%= d.coin %><br><span class="text-muted text-xs"><%= d.network %></span></td>
+                <td class="font-mono" style="font-size:.75rem;max-width:140px;overflow:hidden;text-overflow:ellipsis">
+                  <% if (d.tx_hash) { %>
+                    <%= d.tx_hash.slice(0,18) %>…
+                    <button class="copy-btn" data-copy="<%= d.tx_hash %>" style="margin-top:4px">Copy</button>
+                  <% } else { %>
+                    <span class="text-muted">—</span>
+                  <% } %>
+                </td>
+                <td class="text-muted"><%= new Date(d.created_at).toLocaleDateString() %></td>
+                <td style="max-width:160px;font-size:.8rem"><%= d.admin_note || '—' %></td>
+                <td style="min-width:140px">
+                  <% if (['PENDING','UNDER_REVIEW','ON_HOLD'].includes(d.status)) { %>
+                  <button class="btn btn-gold btn-sm w-full mb-1" data-modal-open="approve-modal-<%= d.id %>">Approve</button>
+                  <button class="btn btn-outline btn-sm w-full mb-1" data-modal-open="hold-modal-<%= d.id %>">Hold</button>
+                  <button class="btn btn-danger btn-sm w-full" data-modal-open="decline-modal-<%= d.id %>">Decline</button>
+                  <% if (d.status === 'PENDING') { %>
+                  <form method="POST" action="/admin/deposits/<%= d.id %>/review" style="margin-top:4px">
+                    <button class="btn btn-ghost btn-sm w-full">Mark Under Review</button>
+                  </form>
+                  <% } %>
+                  <% } else { %>
+                  <span class="pill pill-<%= d.status.toLowerCase() %>"><%= d.status %></span>
+                  <% } %>
+                </td>
+              </tr>
+
+              <!-- Approve modal -->
+              <% if (['PENDING','UNDER_REVIEW','ON_HOLD'].includes(d.status)) { %>
+              <tr style="display:none"><td colspan="7">
+                <div class="modal-backdrop hidden" id="approve-modal-<%= d.id %>">
+                  <div class="modal">
+                    <div class="modal-header"><h3 class="modal-title">Approve Deposit</h3></div>
+                    <div class="modal-body">
+                      <p class="mb-4">Approving will credit <strong>$<%= parseFloat(d.amount||0).toFixed(2) %></strong> to <strong><%= d.user_email %></strong>'s available balance.</p>
+                      <p class="text-muted text-sm mb-4" style="color:var(--amber)">Only approve after verifying the transaction through blockchain explorer or payment provider. Never approve based on a screenshot alone.</p>
+                      <form method="POST" action="/admin/deposits/<%= d.id %>/approve">
+                        <div class="form-group">
+                          <label class="form-label">Internal Note (optional)</label>
+                          <textarea class="form-textarea" name="admin_note" placeholder="TX verified on [explorer], hash matches, amount confirmed..."></textarea>
+                        </div>
+                        <div class="modal-footer" style="padding:0;border:none;margin-top:16px">
+                          <button type="button" class="btn btn-outline" data-modal-close>Cancel</button>
+                          <button type="submit" class="btn btn-gold">Approve &amp; Credit</button>
+                        </div>
+                      </form>
+                    </div>
+                  </div>
+                </div>
+              </td></tr>
+
+              <!-- Hold modal -->
+              <tr style="display:none"><td colspan="7">
+                <div class="modal-backdrop hidden" id="hold-modal-<%= d.id %>">
+                  <div class="modal">
+                    <div class="modal-header"><h3 class="modal-title">Place on Hold</h3></div>
+                    <div class="modal-body">
+                      <form method="POST" action="/admin/deposits/<%= d.id %>/hold">
+                        <div class="form-group">
+                          <label class="form-label">Reason for hold</label>
+                          <textarea class="form-textarea" name="admin_note" placeholder="e.g. Awaiting additional TX confirmation, AML check in progress..." required></textarea>
+                        </div>
+                        <div class="modal-footer" style="padding:0;border:none;margin-top:16px">
+                          <button type="button" class="btn btn-outline" data-modal-close>Cancel</button>
+                          <button type="submit" class="btn btn-primary">Place on Hold</button>
+                        </div>
+                      </form>
+                    </div>
+                  </div>
+                </div>
+              </td></tr>
+
+              <!-- Decline modal -->
+              <tr style="display:none"><td colspan="7">
+                <div class="modal-backdrop hidden" id="decline-modal-<%= d.id %>">
+                  <div class="modal">
+                    <div class="modal-header"><h3 class="modal-title">Decline Deposit</h3></div>
+                    <div class="modal-body">
+                      <p class="mb-4">The user will be notified that their deposit was not verified. The amount will <strong>not</strong> be credited.</p>
+                      <form method="POST" action="/admin/deposits/<%= d.id %>/decline">
+                        <div class="form-group">
+                          <label class="form-label">Reason (shown to user)</label>
+                          <textarea class="form-textarea" name="admin_note" placeholder="e.g. Transaction not found on blockchain, amount mismatch..." required></textarea>
+                        </div>
+                        <div class="modal-footer" style="padding:0;border:none;margin-top:16px">
+                          <button type="button" class="btn btn-outline" data-modal-close>Cancel</button>
+                          <button type="submit" class="btn btn-danger">Decline Deposit</button>
+                        </div>
+                      </form>
+                    </div>
+                  </div>
+                </div>
+              </td></tr>
+              <% } %>
+
+              <% }) %>
+            </tbody>
+          </table>
+        </div>
+        <% } %>
+
+        <!-- Pagination -->
+        <% if (totalPages > 1) { %>
+        <div style="padding:14px 20px;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between">
+          <span class="text-muted text-sm">Page <%= page %> of <%= totalPages %></span>
+          <div class="flex gap-2">
+            <% if (page > 1) { %><a href="?status=<%= currentStatus %>&page=<%= page-1 %>" class="btn btn-outline btn-sm">&#8592;</a><% } %>
+            <% if (page < totalPages) { %><a href="?status=<%= currentStatus %>&page=<%= page+1 %>" class="btn btn-outline btn-sm">&#8594;</a><% } %>
+          </div>
+        </div>
+        <% } %>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="/js/main.js"></script>
+</body>
+</html>

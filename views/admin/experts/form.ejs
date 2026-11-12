@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title><%= expert ? 'Edit Expert' : 'Add Expert' %> — Admin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/main.css">
+  <style>
+    .img-preview { width:120px;height:120px;border-radius:12px;object-fit:cover;border:2px solid var(--border) }
+    .img-preview-cover { width:100%;height:160px;border-radius:12px;object-fit:cover;border:2px solid var(--border) }
+    .img-placeholder { width:120px;height:120px;border-radius:12px;border:2px dashed var(--border);display:flex;align-items:center;justify-content:center;color:var(--text3);font-size:.75rem;flex-direction:column;gap:6px;cursor:pointer }
+    .gallery-grid { display:grid;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:10px;margin-top:12px }
+    .gallery-item { position:relative }
+    .gallery-item img { width:100%;height:90px;object-fit:cover;border-radius:8px;border:1px solid var(--border) }
+    .gallery-item label { position:absolute;top:4px;right:4px;background:rgba(255,74,74,.8);border-radius:50%;width:20px;height:20px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:10px;color:#fff }
+  </style>
+</head>
+<body>
+<div class="app-layout">
+  <%- include('../../partials/sidebar', { user, path, pendingWithdrawals }) %>
+  <div class="main-content">
+  <%- include('../../partials/topbar', { user, balances: typeof balances !== 'undefined' ? balances : null, pageTitle: typeof pageTitle !== 'undefined' ? pageTitle : '' }) %>
+    <div class="page-header">
+      <div style="display:flex;align-items:center;gap:12px">
+        <a href="/admin/experts" class="btn btn-ghost btn-sm">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+          Back
+        </a>
+        <h1 class="page-title" style="margin:0"><%= expert ? 'Edit Expert' : 'Add Expert' %></h1>
+      </div>
+    </div>
+    <div class="page-body">
+      <%- include('../../partials/flash', { flash }) %>
+
+      <div class="info-banner mb-6">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        Only upload genuine photographs provided by the expert with their permission. Never use stock photos or AI-generated images to represent real people.
+      </div>
+
+      <form method="POST" action="<%= expert ? '/admin/experts/' + expert.id + '/update' : '/admin/experts' %>" enctype="multipart/form-data">
+        <div style="display:grid;grid-template-columns:2fr 1fr;gap:20px">
+          <div style="display:flex;flex-direction:column;gap:16px">
+
+            <div class="card">
+              <div class="card-header"><span class="card-title">Expert Profile</span></div>
+              <div class="card-body" style="display:flex;flex-direction:column;gap:14px">
+                <div class="form-group">
+                  <label class="form-label">Full Name *</label>
+                  <input type="text" name="name" class="form-input" value="<%= expert ? expert.name : '' %>" required placeholder="e.g. Sarah Johnson">
+                </div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+                  <div class="form-group">
+                    <label class="form-label">Country / Market</label>
+                    <input type="text" name="country" class="form-input" value="<%= expert ? expert.country : '' %>" placeholder="e.g. United States">
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">Years of Experience</label>
+                    <input type="number" name="years_experience" class="form-input" value="<%= expert ? expert.years_experience : '0' %>" min="0">
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Professional Biography</label>
+                  <textarea name="bio" class="form-input" rows="5" placeholder="Expert's background, experience, and dropshipping journey..."><%= expert ? expert.bio : '' %></textarea>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Areas of Expertise (JSON array)</label>
+                  <input type="text" name="areas_of_expertise" class="form-input" value='<%= expert ? expert.areas_of_expertise : "[]" %>' placeholder='["Beauty","TikTok Marketing","Facebook Ads"]'>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Target Markets (JSON array)</label>
+                  <input type="text" name="target_markets" class="form-input" value='<%= expert ? expert.target_markets : "[]" %>' placeholder='["United States","United Kingdom"]'>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Case Studies / Portfolio Evidence</label>
+                  <textarea name="case_studies" class="form-input" rows="4" placeholder="Describe verified business results, campaigns, and portfolio evidence..."><%= expert ? expert.case_studies : '' %></textarea>
+                </div>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="card-header"><span class="card-title">Portfolio Gallery</span></div>
+              <div class="card-body">
+                <label class="form-label">Upload Portfolio Images</label>
+                <p style="font-size:.8125rem;color:var(--text3);margin-bottom:10px">Screenshots, business evidence, campaign results. Max 10 images, 8MB each. JPG, PNG, WebP only.</p>
+                <input type="file" name="gallery_images" multiple accept="image/jpeg,image/png,image/webp" class="form-input" style="padding:10px">
+                <% if (expert) { %>
+                  <% let gallery = []; try { gallery = JSON.parse(expert.gallery || '[]') } catch(_) {} %>
+                  <% if (gallery.length > 0) { %>
+                  <div class="gallery-grid">
+                    <% gallery.forEach(img => { %>
+                    <div class="gallery-item">
+                      <img src="<%= img %>" alt="Portfolio image" loading="lazy">
+                      <label title="Remove this image">
+                        <input type="checkbox" name="remove_gallery" value="<%= img %>" style="display:none">
+                        ✕
+                      </label>
+                    </div>
+                    <% }) %>
+                  </div>
+                  <p style="font-size:.75rem;color:var(--text3);margin-top:8px">Click ✕ on an image to mark it for removal on save.</p>
+                  <% } %>
+                <% } %>
+              </div>
+            </div>
+
+          </div>
+
+          <div style="display:flex;flex-direction:column;gap:16px">
+
+            <div class="card">
+              <div class="card-header"><span class="card-title">Profile Photo</span></div>
+              <div class="card-body" style="display:flex;flex-direction:column;align-items:center;gap:14px">
+                <% if (expert && expert.profile_image) { %>
+                <img src="<%= expert.profile_image %>" alt="Profile" class="img-preview">
+                <form method="POST" action="/admin/experts/<%= expert.id %>/delete-image" style="width:100%">
+                  <input type="hidden" name="field" value="profile_image">
+                  <button type="submit" class="btn btn-ghost btn-sm" style="color:var(--red);width:100%" onclick="return confirm('Remove profile photo?')">Remove photo</button>
+                </form>
+                <% } else { %>
+                <div class="img-placeholder">
+                  <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+                  No photo
+                </div>
+                <% } %>
+                <div class="form-group" style="width:100%">
+                  <label class="form-label">Upload Photo</label>
+                  <input type="file" name="profile_image" accept="image/jpeg,image/png,image/webp" class="form-input" style="padding:10px">
+                  <p style="font-size:.75rem;color:var(--text3);margin-top:4px">Max 8MB. JPG, PNG or WebP.</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="card-header"><span class="card-title">Cover / Banner</span></div>
+              <div class="card-body" style="display:flex;flex-direction:column;gap:14px">
+                <% if (expert && expert.cover_image) { %>
+                <img src="<%= expert.cover_image %>" alt="Cover" class="img-preview-cover">
+                <form method="POST" action="/admin/experts/<%= expert.id %>/delete-image">
+                  <input type="hidden" name="field" value="cover_image">
+                  <button type="submit" class="btn btn-ghost btn-sm" style="color:var(--red);width:100%" onclick="return confirm('Remove cover image?')">Remove cover</button>
+                </form>
+                <% } %>
+                <div class="form-group">
+                  <label class="form-label">Upload Cover Image</label>
+                  <input type="file" name="cover_image" accept="image/jpeg,image/png,image/webp" class="form-input" style="padding:10px">
+                </div>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="card-header"><span class="card-title">Verification</span></div>
+              <div class="card-body" style="display:flex;flex-direction:column;gap:14px">
+                <div class="form-group">
+                  <label class="form-label">Status</label>
+                  <select name="status" class="form-input">
+                    <option value="DRAFT" <%= (!expert||expert.status==='DRAFT')?'selected':'' %>>Draft</option>
+                    <option value="PUBLISHED" <%= (expert&&expert.status==='PUBLISHED')?'selected':'' %>>Published</option>
+                    <option value="SUSPENDED" <%= (expert&&expert.status==='SUSPENDED')?'selected':'' %>>Suspended</option>
+                  </select>
+                </div>
+                <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-size:.875rem;color:var(--text)">
+                  <input type="checkbox" name="is_verified" value="1" <%= (expert&&expert.is_verified)?'checked':'' %> style="accent-color:var(--cyan);width:16px;height:16px">
+                  Mark as verified expert
+                </label>
+                <div class="form-group">
+                  <label class="form-label">Verification Note</label>
+                  <textarea name="verification_note" class="form-input" rows="2" placeholder="Internal note on verification process..."><%= expert ? expert.verification_note : '' %></textarea>
+                </div>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="card-body" style="display:flex;flex-direction:column;gap:10px">
+                <button type="submit" class="btn btn-primary" style="width:100%">
+                  <%= expert ? 'Save Changes' : 'Create Expert' %>
+                </button>
+                <a href="/admin/experts" class="btn btn-outline" style="width:100%;text-align:center">Cancel</a>
+              </div>
+            </div>
+
+            <% if (expert) { %>
+            <div class="card" style="border-color:rgba(255,74,74,.2)">
+              <div class="card-header"><span class="card-title" style="color:var(--red)">Danger Zone</span></div>
+              <div class="card-body">
+                <form method="POST" action="/admin/experts/<%= expert.id %>/delete" onsubmit="return confirm('Remove this expert and all their images?')">
+                  <button type="submit" class="btn btn-sm" style="background:rgba(255,74,74,.1);color:var(--red);border:1px solid rgba(255,74,74,.3);width:100%">Remove Expert</button>
+                </form>
+              </div>
+            </div>
+            <% } %>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+<script src="/js/main.js"></script>
+</body>
+</html>

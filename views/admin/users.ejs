@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Users — Admin — AutoPips</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/main.css">
+</head>
+<body>
+<div class="app-layout">
+  <%- include('../partials/sidebar', { user, path, pendingWithdrawals }) %>
+  <div class="main-content">
+  <%- include('../partials/topbar', { user, balances: typeof balances !== 'undefined' ? balances : null, pageTitle: typeof pageTitle !== 'undefined' ? pageTitle : '' }) %>
+    <div class="page-header">
+      <h1 class="page-title">User Management</h1>
+      <p class="page-subtitle"><%= total %> registered users</p>
+    </div>
+    <div class="page-body">
+      <form method="GET" action="/admin/users" class="flex gap-3 mb-6 wrap">
+        <input class="form-input" style="max-width:320px" type="text" name="q" value="<%= query %>" placeholder="Search by name or email…">
+        <button class="btn btn-outline">Search</button>
+        <% if (query) { %><a href="/admin/users" class="btn btn-ghost">Clear</a><% } %>
+      </form>
+
+      <div class="card">
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>User</th><th>Available</th><th>Pending</th><th>Lifetime Profit</th><th>Tier / KYC</th><th>Status</th><th></th></tr>
+            </thead>
+            <tbody>
+              <% users.forEach(u => { %>
+              <tr>
+                <td>
+                  <div><strong><%= u.name || '—' %></strong></div>
+                  <div class="text-muted text-xs"><%= u.email %></div>
+                  <% if (!u.email_verified) { %><span style="color:var(--gold);font-size:.75rem">&#9888; Unverified</span><% } %>
+                </td>
+                <td class="tabular-nums" style="color:var(--gold)">$<%= u.available %></td>
+                <td class="tabular-nums text-muted">$<%= u.pending %></td>
+                <td class="tabular-nums" style="color:var(--green-mid)">$<%= parseFloat(u.lifetime_volume).toFixed(2) %></td>
+                <td>
+                  <span class="pill pill-<%= u.tier.toLowerCase() %>"><%= u.tier %></span><br>
+                  <span class="text-muted text-xs">KYC: <%= u.kyc_level %></span>
+                </td>
+                <td>
+                  <% if (u.suspended) { %><span class="pill pill-rejected">Suspended</span>
+                  <% } else if (u.frozen) { %><span class="pill pill-review">Frozen</span>
+                  <% } else { %><span class="pill pill-approved">Active</span><% } %>
+                </td>
+                <td><a href="/admin/users/<%= u.id %>" class="btn btn-outline btn-sm">View</a></td>
+              </tr>
+              <% }) %>
+            </tbody>
+          </table>
+        </div>
+        <% if (totalPages > 1) { %>
+        <div style="padding:14px 20px;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between">
+          <span class="text-muted text-sm">Page <%= page %> of <%= totalPages %></span>
+          <div class="flex gap-2">
+            <% if (page > 1) { %><a href="?q=<%= query %>&page=<%= page-1 %>" class="btn btn-outline btn-sm">&#8592;</a><% } %>
+            <% if (page < totalPages) { %><a href="?q=<%= query %>&page=<%= page+1 %>" class="btn btn-outline btn-sm">&#8594;</a><% } %>
+          </div>
+        </div>
+        <% } %>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="/js/main.js"></script>
+</body>
+</html>

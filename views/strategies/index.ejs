@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Dropshipping Strategies — AutoPips</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/main.css">
+</head>
+<body>
+<div class="app-layout">
+  <%- include('../partials/sidebar', { user, path, pendingWithdrawals: 0 }) %>
+  <div class="main-content">
+  <%- include('../partials/topbar', { user, balances: typeof balances !== 'undefined' ? balances : null, pageTitle: typeof pageTitle !== 'undefined' ? pageTitle : '' }) %>
+    <div class="page-header">
+      <div>
+        <h1 class="page-title">Dropshipping Strategies</h1>
+        <p class="page-subtitle">Ready-made business strategies — copy one and launch immediately</p>
+      </div>
+    </div>
+    <div class="page-body">
+      <%- include('../partials/flash', { flash }) %>
+
+      <!-- Filter bar -->
+      <form method="GET" style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:24px;align-items:center">
+        <input class="form-input" style="max-width:220px" type="text" name="search" placeholder="Search strategies..." value="<%= search %>">
+        <select class="form-select" style="max-width:180px" name="niche" onchange="this.form.submit()">
+          <option value="">All Niches</option>
+          <% niches.forEach(n => { %><option value="<%= n %>" <%= niche === n ? 'selected' : '' %>><%= n %></option><% }) %>
+        </select>
+        <select class="form-select" style="max-width:160px" name="difficulty" onchange="this.form.submit()">
+          <option value="">All Levels</option>
+          <option value="BEGINNER" <%= difficulty === 'BEGINNER' ? 'selected' : '' %>>Beginner</option>
+          <option value="INTERMEDIATE" <%= difficulty === 'INTERMEDIATE' ? 'selected' : '' %>>Intermediate</option>
+          <option value="ADVANCED" <%= difficulty === 'ADVANCED' ? 'selected' : '' %>>Advanced</option>
+        </select>
+        <button type="submit" class="btn btn-outline btn-sm">Search</button>
+      </form>
+
+      <% if (strategies.length === 0) { %>
+      <div class="empty-state"><div class="icon">&#128683;</div><p>No strategies found.</p></div>
+      <% } else { %>
+      <div class="strategy-grid">
+        <% strategies.forEach(s => { %>
+        <% const tags = JSON.parse(s.tags || '[]'); const platforms = JSON.parse(s.recommended_platforms || '[]') %>
+        <div class="strategy-card <%= s.is_featured ? 'featured-card' : '' %>">
+          <% if (s.is_featured) { %><div class="strategy-featured-badge">&#11088; Featured</div><% } %>
+          <div class="strategy-header">
+            <div>
+              <span class="strategy-niche-badge"><%= s.niche %></span>
+              <span class="strategy-difficulty difficulty-<%= s.difficulty.toLowerCase() %>"><%= s.difficulty %></span>
+            </div>
+          </div>
+          <h3 class="strategy-name"><%= s.name %></h3>
+          <p class="strategy-desc"><%= s.description %></p>
+          <div class="strategy-meta">
+            <% if (s.target_country) { %><span>&#127760; <%= s.target_country %></span><% } %>
+            <% if (s.estimated_budget) { %><span>&#128181; From $<%= s.estimated_budget %></span><% } %>
+            <% if (platforms.length > 0) { %><span>&#128247; <%= platforms.join(', ') %></span><% } %>
+          </div>
+          <% if (tags.length > 0) { %>
+          <div class="strategy-tags">
+            <% tags.slice(0,4).forEach(t => { %><span class="stag"><%= t %></span><% }) %>
+          </div>
+          <% } %>
+          <div style="display:flex;gap:10px;margin-top:16px">
+            <button class="btn btn-ghost btn-sm" onclick="showDetails('<%= s.id %>')">Details</button>
+            <% if (myStrategyIds.includes(s.id)) { %>
+              <div class="btn btn-outline btn-sm" style="cursor:default;flex:1;text-align:center">&#10003; Active</div>
+            <% } else { %>
+              <button class="btn btn-primary btn-sm" style="flex:1" onclick="copyStrategy('<%= s.id %>','<%= s.name.replace(/'/g, '') %>')">Copy &amp; Start</button>
+            <% } %>
+          </div>
+        </div>
+
+        <!-- Detail panel (hidden by default) -->
+        <div id="detail-<%= s.id %>" class="strategy-detail-panel" style="display:none">
+          <div class="card" style="margin-top:0">
+            <div class="card-header">
+              <span class="card-title"><%= s.name %></span>
+              <button class="btn btn-ghost btn-sm" onclick="hideDetails('<%= s.id %>')">&#10005; Close</button>
+            </div>
+            <div class="card-body">
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+                <% if (s.marketing_strategy) { %>
+                <div><div class="detail-label">Marketing Strategy</div><p class="detail-text"><%= s.marketing_strategy %></p></div>
+                <% } %>
+                <% if (s.seo_strategy) { %>
+                <div><div class="detail-label">SEO Strategy</div><p class="detail-text"><%= s.seo_strategy %></p></div>
+                <% } %>
+                <% if (s.social_strategy) { %>
+                <div><div class="detail-label">Social Strategy</div><p class="detail-text"><%= s.social_strategy %></p></div>
+                <% } %>
+                <% if (s.setup_instructions) { %>
+                <div><div class="detail-label">Setup Instructions</div><p class="detail-text"><%= s.setup_instructions %></p></div>
+                <% } %>
+              </div>
+              <% if (s.target_audience) { %>
+              <div style="margin-top:16px"><div class="detail-label">Target Audience</div><p class="detail-text"><%= s.target_audience %></p></div>
+              <% } %>
+            </div>
+          </div>
+        </div>
+        <% }) %>
+      </div>
+      <% } %>
+    </div>
+  </div>
+</div>
+
+<!-- Copy Strategy Modal -->
+<div id="copy-modal" class="modal-backdrop hidden">
+  <div class="modal">
+    <div class="modal-title">Copy Strategy &amp; Start</div>
+    <form method="POST" id="copy-form">
+      <div class="form-group">
+        <label class="form-label">Business Name</label>
+        <input class="form-input" type="text" name="business_name" id="copy-biz-name" placeholder="e.g. My Skincare Store" required>
+        <p class="form-hint">You can change this anytime.</p>
+      </div>
+      <div style="display:flex;gap:10px">
+        <button type="button" class="btn btn-ghost" onclick="closeCopyModal()">Cancel</button>
+        <button type="submit" class="btn btn-primary" style="flex:1">Launch Business &#8594;</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script src="/js/main.js"></script>
+<script>
+function copyStrategy(id, name) {
+  document.getElementById('copy-biz-name').value = name + ' Store'
+  document.getElementById('copy-form').action = '/strategies/copy/' + id
+  document.getElementById('copy-modal').classList.remove('hidden')
+}
+function closeCopyModal() { document.getElementById('copy-modal').classList.add('hidden') }
+function showDetails(id) {
+  document.querySelectorAll('.strategy-detail-panel').forEach(el => el.style.display = 'none')
+  document.getElementById('detail-' + id).style.display = 'block'
+  document.getElementById('detail-' + id).scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+}
+function hideDetails(id) { document.getElementById('detail-' + id).style.display = 'none' }
+</script>
+</body>
+</html>

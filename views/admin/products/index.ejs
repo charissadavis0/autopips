@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Product Catalog — Admin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/main.css">
+</head>
+<body>
+<div class="app-layout">
+  <%- include('../../partials/sidebar', { user, path, pendingWithdrawals }) %>
+  <div class="main-content">
+  <%- include('../../partials/topbar', { user, balances: typeof balances !== 'undefined' ? balances : null, pageTitle: typeof pageTitle !== 'undefined' ? pageTitle : '' }) %>
+    <div class="page-header">
+      <div style="display:flex;justify-content:space-between;align-items:center;width:100%">
+        <div>
+          <h1 class="page-title">Product Catalog</h1>
+          <p class="page-subtitle">Manage the official Autopips product catalog</p>
+        </div>
+        <a href="/admin/products/new" class="btn btn-primary btn-sm">+ Add Product</a>
+      </div>
+    </div>
+    <div class="page-body">
+      <%- include('../../partials/flash', { flash }) %>
+
+      <!-- Filters -->
+      <form method="GET" action="/admin/products" class="card mb-6" style="padding:16px 20px">
+        <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end">
+          <div style="flex:1;min-width:160px">
+            <label class="form-label">Search</label>
+            <input type="text" name="q" value="<%= filters.q %>" class="form-input" placeholder="Product name...">
+          </div>
+          <div style="min-width:140px">
+            <label class="form-label">Status</label>
+            <select name="status" class="form-input">
+              <option value="">All</option>
+              <option value="DRAFT" <%= filters.status==='DRAFT'?'selected':'' %>>Draft</option>
+              <option value="PUBLISHED" <%= filters.status==='PUBLISHED'?'selected':'' %>>Published</option>
+              <option value="ARCHIVED" <%= filters.status==='ARCHIVED'?'selected':'' %>>Archived</option>
+            </select>
+          </div>
+          <div style="min-width:140px">
+            <label class="form-label">Category</label>
+            <select name="category" class="form-input">
+              <option value="">All categories</option>
+              <% categories.forEach(c => { %><option value="<%= c %>" <%= filters.category===c?'selected':'' %>><%= c %></option><% }) %>
+            </select>
+          </div>
+          <button type="submit" class="btn btn-outline btn-sm" style="align-self:flex-end">Filter</button>
+          <a href="/admin/products" class="btn btn-ghost btn-sm" style="align-self:flex-end">Clear</a>
+        </div>
+      </form>
+
+      <!-- Stats row -->
+      <div class="grid-4 mb-6">
+        <div class="stat-card">
+          <div class="stat-label">Total Products</div>
+          <div class="stat-value"><%= products.length %></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Published</div>
+          <div class="stat-value" style="color:var(--green)"><%= products.filter(p=>p.status==='PUBLISHED').length %></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Drafts</div>
+          <div class="stat-value" style="color:var(--gold)"><%= products.filter(p=>p.status==='DRAFT').length %></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Archived</div>
+          <div class="stat-value" style="color:var(--text3)"><%= products.filter(p=>p.status==='ARCHIVED').length %></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <% if (products.length === 0) { %>
+        <div class="empty-state">
+          <svg width="40" height="40" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" style="margin:0 auto 12px;display:block;color:var(--text3)"><path d="M20 7H4a2 2 0 00-2 2v9a2 2 0 002 2h16a2 2 0 002-2V9a2 2 0 00-2-2z"/><path d="M16 2l-4 5-4-5"/></svg>
+          <p>No products found. <a href="/admin/products/new" class="auth-link">Add the first one</a></p>
+        </div>
+        <% } else { %>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Product</th>
+                <th>Category</th>
+                <th>Cost</th>
+                <th>Price</th>
+                <th>Margin</th>
+                <th>Stock</th>
+                <th>Status</th>
+                <th>Flags</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              <% products.forEach(p => { %>
+              <% let pImgs=[]; try{pImgs=JSON.parse(p.images||'[]')}catch(_){} %>
+              <tr>
+                <td>
+                  <div style="display:flex;align-items:center;gap:10px">
+                    <% if(pImgs[0]) { %>
+                    <img src="<%= pImgs[0] %>" alt="" style="width:40px;height:40px;object-fit:cover;border-radius:4px;flex-shrink:0;border:1px solid var(--border)">
+                    <% } else { %>
+                    <div style="width:40px;height:40px;background:var(--surface2);border-radius:4px;flex-shrink:0;display:flex;align-items:center;justify-content:center">
+                      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+                    </div>
+                    <% } %>
+                    <div>
+                      <div style="font-weight:600;color:#fff;font-size:.875rem"><%= p.name %></div>
+                      <div style="font-size:.75rem;color:var(--text3)"><%= p.supplier_name || 'No supplier' %></div>
+                    </div>
+                  </div>
+                </td>
+                <td><span class="pill" style="background:rgba(0,212,255,.1);color:var(--cyan)"><%= p.category %></span></td>
+                <td class="tabular-nums">$<%= parseFloat(p.cost||0).toFixed(2) %></td>
+                <td class="tabular-nums">$<%= parseFloat(p.suggested_price||0).toFixed(2) %></td>
+                <td class="tabular-nums" style="color:var(--green)"><%= p.profit_margin %>%</td>
+                <td>
+                  <span class="pill pill-<%= p.stock_status==='IN_STOCK'?'active':'inactive' %>">
+                    <%= p.stock_status.replace('_',' ') %>
+                  </span>
+                </td>
+                <td>
+                  <form method="POST" action="/admin/products/<%= p.id %>/status" style="display:inline">
+                    <select name="status" onchange="this.form.submit()" class="form-input" style="padding:4px 8px;font-size:.75rem;width:auto">
+                      <option value="DRAFT" <%= p.status==='DRAFT'?'selected':'' %>>Draft</option>
+                      <option value="PUBLISHED" <%= p.status==='PUBLISHED'?'selected':'' %>>Published</option>
+                      <option value="ARCHIVED" <%= p.status==='ARCHIVED'?'selected':'' %>>Archived</option>
+                    </select>
+                  </form>
+                </td>
+                <td style="font-size:.75rem;color:var(--text3)">
+                  <% if (p.is_featured) { %><span class="pill" style="background:rgba(255,184,0,.1);color:var(--gold);margin-right:4px">Featured</span><% } %>
+                  <% if (p.is_trending) { %><span class="pill" style="background:rgba(0,230,118,.1);color:var(--green)">Trending</span><% } %>
+                </td>
+                <td style="white-space:nowrap">
+                  <a href="/admin/products/<%= p.id %>/edit" class="btn btn-ghost btn-sm">Edit</a>
+                  <form method="POST" action="/admin/products/<%= p.id %>/delete" style="display:inline" onsubmit="return confirm('Delete this product?')">
+                    <button class="btn btn-ghost btn-sm" style="color:var(--red)">Delete</button>
+                  </form>
+                </td>
+              </tr>
+              <% }) %>
+            </tbody>
+          </table>
+        </div>
+        <% } %>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="/js/main.js"></script>
+</body>
+</html>

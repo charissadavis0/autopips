@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Find an Agent — AutoPips</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/main.css">
+</head>
+<body>
+<div class="app-layout">
+  <%- include('../partials/sidebar', { user, path, pendingWithdrawals: 0 }) %>
+  <div class="main-content">
+  <%- include('../partials/topbar', { user, balances: typeof balances !== 'undefined' ? balances : null, pageTitle: typeof pageTitle !== 'undefined' ? pageTitle : '' }) %>
+    <div class="page-header">
+      <div>
+        <h1 class="page-title">Find an Agent</h1>
+        <p class="page-subtitle">Hire a verified platform agent to manage your dropshipping business</p>
+      </div>
+    </div>
+    <div class="page-body">
+      <%- include('../partials/flash', { flash }) %>
+      <% if (flash.error === 'already_hired') { %><div class="alert alert-warn">You have already hired this agent.</div><% } %>
+
+      <!-- What agents do -->
+      <div class="info-banner" style="margin-bottom:28px">
+        <div class="info-banner-icon">&#128100;</div>
+        <div>
+          <strong style="color:#fff">What does an agent do?</strong>
+          <p style="color:var(--text2);margin-top:4px;font-size:.875rem">Agents are verified professionals who manage your dropshipping business on your behalf. They can set up your store, source products, create social media accounts, produce AI videos, and run your advertising — all funded directly from your wallet. <strong style="color:var(--cyan)">You retain full control of your wallet and payouts.</strong></p>
+        </div>
+      </div>
+
+      <div class="agent-grid">
+        <% agents.forEach(a => { %>
+        <% const expertise = JSON.parse(a.expertise || '[]'); const niches = JSON.parse(a.niches || '[]'); const services = JSON.parse(a.services || '[]'); const languages = JSON.parse(a.languages || '["English"]') %>
+        <div class="agent-card">
+          <div class="agent-card-top">
+            <% if (a.profile_image) { %>
+            <img src="<%= a.profile_image %>" alt="<%= a.name %>" class="agent-avatar" style="object-fit:cover;border-radius:50%">
+          <% } else { %>
+            <div class="agent-avatar"><%= a.avatar_initials %></div>
+          <% } %>
+            <div class="agent-info">
+              <div class="agent-name"><%= a.name %></div>
+              <div class="agent-meta">
+                <span class="agent-rating">&#9733; <%= a.rating %></span>
+                <span class="agent-reviews">(<%= a.review_count %> reviews)</span>
+              </div>
+              <div style="font-size:.78rem;color:var(--text3);margin-top:2px"><%= a.stores_managed %> stores managed</div>
+            </div>
+            <% if (a.is_verified) { %><div class="agent-verified">&#10003; Verified</div><% } %>
+          </div>
+          <p class="agent-bio"><%= a.bio %></p>
+          <div class="agent-tags">
+            <% niches.slice(0,3).forEach(n => { %><span class="stag"><%= n %></span><% }) %>
+          </div>
+          <div class="agent-services-preview">
+            <div class="detail-label" style="margin-bottom:6px">Services</div>
+            <% services.slice(0,4).forEach(s => { %><div class="agent-service-item">&#10003; <%= s %></div><% }) %>
+            <% if (services.length > 4) { %><div class="agent-service-item text-muted">+<%= services.length - 4 %> more...</div><% } %>
+          </div>
+          <div class="agent-pricing">
+            <div>
+              <div class="agent-fee">$<%= parseFloat(a.base_fee).toFixed(0) %><span>/<%= a.fee_period.toLowerCase() %></span></div>
+              <div style="font-size:.78rem;color:var(--text3)">Video: $<%= a.video_rate %> &nbsp;|&nbsp; Ads: $<%= a.ad_management_rate %>/mo</div>
+            </div>
+            <% if (myAssignments.includes(a.id)) { %>
+              <div class="btn btn-outline btn-sm" style="cursor:default">&#10003; Hired</div>
+            <% } else { %>
+              <a href="/agents/<%= a.id %>/hire" class="btn btn-primary btn-sm">Hire Agent</a>
+            <% } %>
+          </div>
+          <div style="font-size:.78rem;color:var(--text3);margin-top:10px">&#127760; <%= languages.join(', ') %></div>
+        </div>
+        <% }) %>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="/js/main.js"></script>
+</body>
+</html>

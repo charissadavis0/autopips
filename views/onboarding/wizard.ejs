@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Setup — AutoPips</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/main.css">
+</head>
+<body style="background:var(--bg);display:flex;flex-direction:column;min-height:100vh">
+  <!-- Top bar -->
+  <div style="height:64px;background:var(--bg2);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 32px">
+    <div style="display:flex;align-items:center;gap:10px;font-size:1.1rem;font-weight:800;color:#fff">
+      <div style="width:32px;height:32px;background:var(--grad);border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:.8rem;font-weight:800;color:#000">AP</div>
+      AutoPips
+    </div>
+    <a href="/dashboard" style="font-size:.8rem;color:var(--text3)">Skip setup &#8594;</a>
+  </div>
+
+  <div style="flex:1;display:flex;align-items:center;justify-content:center;padding:40px 24px">
+    <div style="width:100%;max-width:580px">
+      <!-- Progress -->
+      <div style="display:flex;gap:6px;margin-bottom:36px">
+        <% for (let i = 1; i <= 5; i++) { %>
+        <div style="flex:1;height:4px;border-radius:2px;background:<%= i <= step ? 'var(--grad)' : 'var(--border2)' %>"></div>
+        <% } %>
+      </div>
+      <div style="font-size:.8125rem;color:var(--text3);margin-bottom:24px">Step <%= step %> of 5</div>
+
+      <!-- ── Step 1: Mode ── -->
+      <% if (step === 1) { %>
+      <h2 style="font-size:1.75rem;font-weight:800;color:#fff;margin-bottom:8px">Welcome, <%= user.name ? user.name.split(' ')[0] : 'Seller' %>!</h2>
+      <p style="color:var(--text2);margin-bottom:28px">How would you like to run your dropshipping business?</p>
+      <form method="POST" action="/onboarding/step/1">
+        <div style="display:flex;flex-direction:column;gap:12px;margin-bottom:24px">
+          <label class="mode-option">
+            <input type="radio" name="mode" value="INDEPENDENT" required style="accent-color:var(--cyan)">
+            <div class="mode-option-body">
+              <div class="mode-option-title">&#128084; Independent</div>
+              <div class="mode-option-desc">I want to research products, manage my store, and run my business myself. I'll use the platform tools but make my own decisions.</div>
+            </div>
+          </label>
+          <label class="mode-option">
+            <input type="radio" name="mode" value="MANAGED" style="accent-color:var(--cyan)">
+            <div class="mode-option-body">
+              <div class="mode-option-title">&#128100; Managed Dropshipping</div>
+              <div class="mode-option-desc">I want to hire a platform agent to manage my business for me. I'll fund the operations and monitor performance — my agent handles the rest.</div>
+            </div>
+          </label>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Your Country</label>
+          <input class="form-input" type="text" name="country" placeholder="e.g. United Kingdom, Nigeria, USA" value="<%= user.country || '' %>">
+        </div>
+        <button type="submit" class="btn btn-primary w-full">Continue &#8594;</button>
+      </form>
+
+      <!-- ── Step 2: Payout ── -->
+      <% } else if (step === 2) { %>
+      <h2 style="font-size:1.75rem;font-weight:800;color:#fff;margin-bottom:8px">Connect Your Payout Account</h2>
+      <p style="color:var(--text2);margin-bottom:28px">Where do you want to receive proceeds from your sales? (You can complete this later.)</p>
+      <div class="info-banner" style="margin-bottom:20px">
+        <div style="font-size:1.2rem">&#128274;</div>
+        <p style="font-size:.875rem;color:var(--text2)">Payout integrations are coming soon. For now, profits are tracked in your wallet and can be withdrawn via crypto at any time.</p>
+      </div>
+      <form method="POST" action="/onboarding/step/2">
+        <div style="display:flex;gap:10px">
+          <button type="submit" name="action" value="skip" class="btn btn-ghost" style="flex:1">Skip for now</button>
+          <button type="submit" class="btn btn-primary" style="flex:1">Continue &#8594;</button>
+        </div>
+      </form>
+
+      <!-- ── Step 3: Sourcing ── -->
+      <% } else if (step === 3) { %>
+      <h2 style="font-size:1.75rem;font-weight:800;color:#fff;margin-bottom:8px">How Will You Source Products?</h2>
+      <p style="color:var(--text2);margin-bottom:28px">Choose your primary product sourcing method.</p>
+      <form method="POST" action="/onboarding/step/3">
+        <div style="display:flex;flex-direction:column;gap:12px;margin-bottom:24px">
+          <label class="mode-option">
+            <input type="radio" name="sourcing" value="AUTOPIPS" checked style="accent-color:var(--cyan)">
+            <div class="mode-option-body">
+              <div class="mode-option-title">&#9889; Autopips Catalog</div>
+              <div class="mode-option-desc">Browse our curated catalog of verified, high-margin products. Add to your store with one click. No supplier research needed.</div>
+            </div>
+          </label>
+          <label class="mode-option" style="opacity:.6">
+            <input type="radio" name="sourcing" value="EXTERNAL" disabled style="accent-color:var(--cyan)">
+            <div class="mode-option-body">
+              <div class="mode-option-title">&#128279; External Import <span class="nav-soon" style="margin-left:8px">Coming Soon</span></div>
+              <div class="mode-option-desc">Import products from AliExpress, CJdropshipping, Printful, Printify and other suppliers using product URLs or bulk CSV.</div>
+            </div>
+          </label>
+        </div>
+        <button type="submit" class="btn btn-primary w-full">Continue &#8594;</button>
+      </form>
+
+      <!-- ── Step 4: Strategy ── -->
+      <% } else if (step === 4) { %>
+      <h2 style="font-size:1.75rem;font-weight:800;color:#fff;margin-bottom:8px">Pick a Strategy (Optional)</h2>
+      <p style="color:var(--text2);margin-bottom:20px">Start with a proven strategy or skip and browse manually.</p>
+      <form method="POST" action="/onboarding/step/4">
+        <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:20px">
+          <% strategies.forEach(s => { %>
+          <label style="display:flex;align-items:flex-start;gap:12px;cursor:pointer;background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px">
+            <input type="radio" name="strategy_id" value="<%= s.id %>" style="accent-color:var(--cyan);margin-top:3px">
+            <div>
+              <div style="font-weight:600;color:#fff;font-size:.875rem"><%= s.name %></div>
+              <div style="font-size:.8rem;color:var(--text2);margin-top:2px"><%= s.niche %> &nbsp;|&nbsp; From $<%= s.estimated_budget %> &nbsp;|&nbsp; <span class="difficulty-<%= s.difficulty.toLowerCase() %>"><%= s.difficulty %></span></div>
+            </div>
+          </label>
+          <% }) %>
+        </div>
+        <div style="display:flex;gap:10px">
+          <button type="submit" name="action" value="skip" class="btn btn-ghost" style="flex:1">Skip</button>
+          <button type="submit" class="btn btn-primary" style="flex:1">Select &amp; Continue &#8594;</button>
+        </div>
+      </form>
+
+      <!-- ── Step 5: Agent ── -->
+      <% } else if (step === 5) { %>
+      <h2 style="font-size:1.75rem;font-weight:800;color:#fff;margin-bottom:8px">Want an Agent to Manage Your Business?</h2>
+      <p style="color:var(--text2);margin-bottom:20px">An agent handles everything — products, social media, videos, and ads — while you monitor performance.</p>
+      <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:20px">
+        <% agents.forEach(a => { %>
+        <div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px;display:flex;align-items:center;justify-content:space-between;gap:12px">
+          <div style="display:flex;align-items:center;gap:10px">
+            <div class="agent-avatar" style="width:40px;height:40px;font-size:.85rem"><%= a.avatar_initials %></div>
+            <div>
+              <div style="font-weight:600;color:#fff;font-size:.875rem"><%= a.name %></div>
+              <div style="font-size:.78rem;color:var(--gold)">&#9733; <%= a.rating %> &nbsp;|&nbsp; <span style="color:var(--text3)">$<%= a.base_fee %>/mo</span></div>
+            </div>
+          </div>
+          <a href="/agents/<%= a.id %>/hire" class="btn btn-outline btn-sm">Hire</a>
+        </div>
+        <% }) %>
+      </div>
+      <form method="POST" action="/onboarding/step/5">
+        <div style="display:flex;gap:10px">
+          <button type="submit" name="action" value="skip" class="btn btn-ghost" style="flex:1">Skip — I'll manage myself</button>
+          <button type="submit" class="btn btn-primary" style="flex:1">Finish Setup &#8594;</button>
+        </div>
+      </form>
+      <% } %>
+    </div>
+  </div>
+</body>
+</html>

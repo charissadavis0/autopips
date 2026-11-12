@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Hire <%= agent.name %> — AutoPips</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/main.css">
+</head>
+<body>
+<div class="app-layout">
+  <%- include('../partials/sidebar', { user, path, pendingWithdrawals: 0 }) %>
+  <div class="main-content">
+  <%- include('../partials/topbar', { user, balances: typeof balances !== 'undefined' ? balances : null, pageTitle: typeof pageTitle !== 'undefined' ? pageTitle : '' }) %>
+    <div class="page-header">
+      <div>
+        <h1 class="page-title">Hire Agent</h1>
+        <p class="page-subtitle"><a href="/agents" style="color:var(--cyan)">&#8592; Back to agents</a></p>
+      </div>
+    </div>
+    <div class="page-body">
+      <% if (typeof flash !== 'undefined' && flash.error) { %>
+        <div class="alert alert-error">Insufficient wallet balance. Please deposit funds first.</div>
+      <% } %>
+      <div style="max-width:600px">
+        <!-- Agent summary -->
+        <div class="card mb-6">
+          <div class="card-body">
+            <div style="display:flex;gap:16px;align-items:center">
+              <% if (agent.profile_image) { %>
+                <img src="<%= agent.profile_image %>" alt="<%= agent.name %>" style="width:56px;height:56px;border-radius:50%;object-fit:cover;flex-shrink:0">
+              <% } else { %>
+                <div class="agent-avatar" style="width:56px;height:56px;font-size:1.1rem"><%= agent.avatar_initials %></div>
+              <% } %>
+              <div>
+                <div style="font-size:1.1rem;font-weight:700;color:#fff"><%= agent.name %></div>
+                <div style="color:var(--gold);font-size:.875rem">&#9733; <%= agent.rating %> &nbsp;&middot;&nbsp; <span style="color:var(--text3)"><%= agent.review_count %> reviews</span></div>
+                <div style="color:var(--text2);font-size:.875rem;margin-top:4px"><%= agent.bio.substring(0,120) %>...</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <form method="POST" action="/agents/<%= agent.id %>/hire">
+          <div class="card mb-6">
+            <div class="card-header"><span class="card-title">Hire Configuration</span></div>
+            <div class="card-body">
+              <div class="form-group">
+                <label class="form-label">Assign to Business (optional)</label>
+                <select class="form-select" name="business_id">
+                  <option value="">— No specific business yet —</option>
+                  <% businesses.forEach(b => { %>
+                  <option value="<%= b.id %>"><%= b.name %> (<%= b.status %>)</option>
+                  <% }) %>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Services Required</label>
+                <% const services = JSON.parse(agent.services || '[]') %>
+                <div style="display:flex;flex-direction:column;gap:8px">
+                  <% services.forEach(s => { %>
+                  <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-size:.875rem;color:var(--text2)">
+                    <input type="checkbox" name="services" value="<%= s %>" style="accent-color:var(--cyan)"> <%= s %>
+                  </label>
+                  <% }) %>
+                </div>
+              </div>
+              <div class="form-group">
+                <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-size:.875rem;color:var(--text2)">
+                  <input type="checkbox" name="can_manage_social" value="1" style="accent-color:var(--cyan)">
+                  <div>
+                    Allow agent to manage social media accounts
+                    <div style="font-size:.78rem;color:var(--text3);margin-top:2px">Agent will create NEW brand accounts — they will not ask for your personal social media passwords.</div>
+                  </div>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <!-- Cost breakdown -->
+          <div class="card mb-6" style="border-color:rgba(0,212,255,.2)">
+            <div class="card-header"><span class="card-title">Cost Breakdown</span></div>
+            <div class="card-body">
+              <div class="info-row"><span class="info-key">Monthly management fee</span><span class="info-val" style="color:var(--cyan)">$<%= parseFloat(agent.base_fee).toFixed(2) %></span></div>
+              <div class="info-row"><span class="info-key">Video creation rate</span><span class="info-val">$<%= agent.video_rate %> per video</span></div>
+              <div class="info-row"><span class="info-key">Ad management rate</span><span class="info-val">$<%= agent.ad_management_rate %>/month</span></div>
+              <div class="info-row"><span class="info-key">Your available balance</span>
+                <span class="info-val" style="color:<%= parseFloat(balances.available) >= parseFloat(agent.base_fee) ? 'var(--green)' : 'var(--red)' %>">$<%= balances.available %></span></div>
+              <% if (parseFloat(balances.available) < parseFloat(agent.base_fee)) { %>
+              <div class="alert alert-warn" style="margin-top:12px">Your balance is too low. <a href="/wallet?tab=deposit" style="color:var(--gold)">Deposit funds first</a></div>
+              <% } %>
+            </div>
+          </div>
+
+          <!-- Security note -->
+          <div class="info-banner" style="margin-bottom:20px">
+            <div class="info-banner-icon">&#128274;</div>
+            <div>
+              <strong style="color:#fff">Your wallet &amp; payouts remain private</strong>
+              <p style="color:var(--text2);font-size:.8125rem;margin-top:4px">Agents can only spend funds you explicitly authorize per task. They cannot access your payout details, make withdrawals, or view your full wallet history.</p>
+            </div>
+          </div>
+
+          <div style="display:flex;gap:12px">
+            <a href="/agents" class="btn btn-ghost">Cancel</a>
+            <button type="submit" class="btn btn-primary" style="flex:1"
+              <%= parseFloat(balances.available) < parseFloat(agent.base_fee) ? 'disabled style="opacity:.5;cursor:not-allowed"' : '' %>>
+              Hire <%= agent.name %> — $<%= parseFloat(agent.base_fee).toFixed(2) %> now
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="/js/main.js"></script>
+</body>
+</html>

@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Withdrawals — Admin — AutoPips</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/main.css">
+</head>
+<body>
+<div class="app-layout">
+  <%- include('../partials/sidebar', { user, path, pendingWithdrawals }) %>
+  <div class="main-content">
+  <%- include('../partials/topbar', { user, balances: typeof balances !== 'undefined' ? balances : null, pageTitle: typeof pageTitle !== 'undefined' ? pageTitle : '' }) %>
+    <div class="page-header">
+      <h1 class="page-title">Withdrawal Management</h1>
+      <p class="page-subtitle"><%= total %> records &middot; status: <%= currentStatus %></p>
+    </div>
+    <div class="page-body">
+      <%- include('../partials/flash', { flash }) %>
+
+      <!-- Status filter tabs -->
+      <div class="tabs mb-6" style="width:fit-content">
+        <% ['SUBMITTED','UNDER_REVIEW','APPROVED','COMPLETED','REJECTED'].forEach(s => { %>
+        <a href="/admin/withdrawals?status=<%= s %>" class="tab <%= currentStatus === s ? 'active' : '' %>" style="text-decoration:none"><%= s.replace('_',' ') %></a>
+        <% }) %>
+      </div>
+
+      <div class="card">
+        <% if (withdrawals.length === 0) { %>
+        <div class="empty-state"><div class="icon">&#10003;</div><p>No <%= currentStatus.toLowerCase() %> withdrawals.</p></div>
+        <% } else { %>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>User</th><th>Amount</th><th>Coin/Network</th><th>Address</th><th>Date</th><th>Status</th><th>Actions</th></tr>
+            </thead>
+            <tbody>
+              <% withdrawals.forEach(w => { %>
+              <tr>
+                <td>
+                  <div><strong><%= w.user_name || w.user_email %></strong></div>
+                  <div class="text-muted text-xs"><%= w.user_email %></div>
+                  <span class="pill pill-<%= w.user_tier.toLowerCase() %>" style="font-size:10px"><%= w.user_tier %></span>
+                </td>
+                <td class="tabular-nums">
+                  $<%= parseFloat(w.amount).toFixed(2) %>
+                  <div class="text-muted text-xs">Fee: $<%= parseFloat(w.fee).toFixed(2) %></div>
+                </td>
+                <td><%= w.coin %><br><span class="text-muted text-xs"><%= w.network %></span></td>
+                <td class="font-mono" style="font-size:.75rem;max-width:140px;overflow:hidden;text-overflow:ellipsis">
+                  <%= w.address.slice(0,18) %>…
+                  <button class="copy-btn" data-copy="<%= w.address %>" style="margin-top:4px">Copy</button>
+                </td>
+                <td class="text-muted"><%= new Date(w.created_at).toLocaleDateString() %></td>
+                <td><span class="pill pill-<%= w.status.toLowerCase() %>"><%= w.status %></span></td>
+                <td>
+                  <% if (['SUBMITTED','UNDER_REVIEW'].includes(w.status)) { %>
+                  <form method="POST" action="/admin/withdrawals/<%= w.id %>/approve" data-confirm="Approve this withdrawal of $<%= parseFloat(w.amount).toFixed(2) %>?">
+                    <button class="btn btn-gold btn-sm w-full mb-1">Approve</button>
+                  </form>
+                  <button class="btn btn-outline btn-sm w-full mb-1" data-modal-open="hold-modal-<%= w.id %>">Hold</button>
+                  <button class="btn btn-danger btn-sm w-full" data-modal-open="reject-modal-<%= w.id %>">Reject</button>
+                  <% } else if (w.status === 'APPROVED') { %>
+                  <form method="POST" action="/admin/withdrawals/<%= w.id %>/complete" data-confirm="Mark this withdrawal as paid/completed?">
+                    <input type="hidden" name="tx_hash" value="">
+                    <button class="btn btn-outline btn-sm w-full">Mark Paid</button>
+                  </form>
+                  <% } %>
+                </td>
+              </tr>
+              <!-- Hold modal -->
+              <% if (['SUBMITTED','UNDER_REVIEW'].includes(w.status)) { %>
+              <tr style="display:none"><td colspan="7">
+                <div class="modal-backdrop hidden" id="hold-modal-<%= w.id %>">
+                  <div class="modal">
+                    <div class="modal-header"><h3 class="modal-title">Place Withdrawal on Hold</h3></div>
+                    <div class="modal-body">
+                      <p class="mb-4">The withdrawal will be marked <strong>Under Review</strong>. Funds remain reserved. The user will be notified.</p>
+                      <form method="POST" action="/admin/withdrawals/<%= w.id %>/hold">
+                        <div class="form-group">
+                          <label class="form-label">Internal note (optional)</label>
+                          <textarea class="form-textarea" name="admin_note" placeholder="Reason for hold — internal only"></textarea>
+                        </div>
+                        <div class="modal-footer" style="padding:0;border:none;margin-top:16px">
+                          <button type="button" class="btn btn-outline" data-modal-close>Cancel</button>
+                          <button type="submit" class="btn btn-primary">Place on Hold</button>
+                        </div>
+                      </form>
+                    </div>
+                  </div>
+                </div>
+              </td></tr>
+              <!-- Reject modal -->
+              <tr style="display:none"><td colspan="7">
+                <div class="modal-backdrop hidden" id="reject-modal-<%= w.id %>">
+                  <div class="modal">
+                    <div class="modal-header"><h3 class="modal-title">Reject Withdrawal</h3></div>
+                    <div class="modal-body">
+                      <p class="mb-4">Rejecting will <strong>refund</strong> $<%= parseFloat(w.amount).toFixed(2) %> to <strong><%= w.user_email %></strong>'s available balance.</p>
+                      <form method="POST" action="/admin/withdrawals/<%= w.id %>/reject">
+                        <div class="form-group">
+                          <label class="form-label">Reason (required)</label>
+                          <textarea class="form-textarea" name="reason" placeholder="Reason shown to user" required></textarea>
+                        </div>
+                        <div class="modal-footer" style="padding:0;border:none;margin-top:16px">
+                          <button type="button" class="btn btn-outline" data-modal-close>Cancel</button>
+                          <button type="submit" class="btn btn-danger">Confirm Rejection</button>
+                        </div>
+                      </form>
+                    </div>
+                  </div>
+                </div>
+              </td></tr>
+              <% } %>
+              <% }) %>
+            </tbody>
+          </table>
+        </div>
+        <% } %>
+
+        <!-- Pagination -->
+        <% if (totalPages > 1) { %>
+        <div style="padding:14px 20px;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between">
+          <span class="text-muted text-sm">Page <%= page %> of <%= totalPages %></span>
+          <div class="flex gap-2">
+            <% if (page > 1) { %><a href="?status=<%= currentStatus %>&page=<%= page-1 %>" class="btn btn-outline btn-sm">&#8592;</a><% } %>
+            <% if (page < totalPages) { %><a href="?status=<%= currentStatus %>&page=<%= page+1 %>" class="btn btn-outline btn-sm">&#8594;</a><% } %>
+          </div>
+        </div>
+        <% } %>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="/js/main.js"></script>
+</body>
+</html>

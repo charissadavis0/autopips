@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title><%= agent ? 'Edit Agent' : 'Add Agent' %> — Admin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/main.css">
+</head>
+<body>
+<div class="app-layout">
+  <%- include('../../partials/sidebar', { user, path, pendingWithdrawals }) %>
+  <div class="main-content">
+  <%- include('../../partials/topbar', { user, balances: typeof balances !== 'undefined' ? balances : null, pageTitle: typeof pageTitle !== 'undefined' ? pageTitle : '' }) %>
+    <div class="page-header">
+      <div style="display:flex;align-items:center;gap:12px">
+        <a href="/admin/agents" class="btn btn-ghost btn-sm">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+          Back
+        </a>
+        <h1 class="page-title" style="margin:0"><%= agent ? 'Edit Agent' : 'Add Agent' %></h1>
+      </div>
+    </div>
+    <div class="page-body">
+      <%- include('../../partials/flash', { flash }) %>
+
+      <form method="POST" action="<%= agent ? '/admin/agents/' + agent.id : '/admin/agents' %>" enctype="multipart/form-data">
+        <div style="display:grid;grid-template-columns:2fr 1fr;gap:20px">
+          <div style="display:flex;flex-direction:column;gap:16px">
+
+            <div class="card">
+              <div class="card-header"><span class="card-title">Agent Profile</span></div>
+              <div class="card-body" style="display:flex;flex-direction:column;gap:14px">
+                <div style="display:grid;grid-template-columns:2fr 1fr;gap:12px">
+                  <div class="form-group">
+                    <label class="form-label">Full Name *</label>
+                    <input type="text" name="name" class="form-input" value="<%= agent ? agent.name : '' %>" required placeholder="e.g. Sarah Chen">
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">Avatar Initials</label>
+                    <input type="text" name="avatar_initials" class="form-input" value="<%= agent ? agent.avatar_initials : '' %>" maxlength="2" placeholder="SC" style="text-transform:uppercase">
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Biography</label>
+                  <textarea name="bio" class="form-input" rows="4" placeholder="Agent background, experience, and specializations..."><%= agent ? agent.bio : '' %></textarea>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Expertise (JSON array)</label>
+                  <input type="text" name="expertise" class="form-input" value='<%= agent ? agent.expertise : "[]" %>' placeholder='["Social Media","TikTok Ads","Content Creation"]'>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Niches (JSON array)</label>
+                  <input type="text" name="niches" class="form-input" value='<%= agent ? agent.niches : "[]" %>' placeholder='["Beauty","Fashion","Home Decor"]'>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Languages (JSON array)</label>
+                  <input type="text" name="languages" class="form-input" value='<%= agent ? agent.languages : "[\"English\"]" %>' placeholder='["English","Spanish"]'>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Services (JSON array)</label>
+                  <textarea name="services" class="form-input" rows="2" placeholder='["Store setup","Social media management","AI video generation","SEO"]'><%= agent ? agent.services : '[]' %></textarea>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          <div style="display:flex;flex-direction:column;gap:16px">
+            <div class="card">
+              <div class="card-header"><span class="card-title">Pricing</span></div>
+              <div class="card-body" style="display:flex;flex-direction:column;gap:14px">
+                <div class="form-group">
+                  <label class="form-label">Base Management Fee ($)</label>
+                  <input type="number" name="base_fee" class="form-input" step="0.01" value="<%= agent ? agent.base_fee : '100.00' %>" placeholder="100.00">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Fee Period</label>
+                  <select name="fee_period" class="form-input">
+                    <option value="MONTHLY" <%= (!agent||agent.fee_period==='MONTHLY')?'selected':'' %>>Monthly</option>
+                    <option value="WEEKLY" <%= (agent&&agent.fee_period==='WEEKLY')?'selected':'' %>>Weekly</option>
+                    <option value="PER_STORE" <%= (agent&&agent.fee_period==='PER_STORE')?'selected':'' %>>Per Store</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Video Rate ($ per video)</label>
+                  <input type="number" name="video_rate" class="form-input" step="0.01" value="<%= agent ? agent.video_rate : '25.00' %>">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Ad Management Rate ($/mo)</label>
+                  <input type="number" name="ad_management_rate" class="form-input" step="0.01" value="<%= agent ? agent.ad_management_rate : '50.00' %>">
+                </div>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="card-header"><span class="card-title">Profile Photo</span></div>
+              <div class="card-body" style="display:flex;flex-direction:column;align-items:center;gap:14px">
+                <% if (agent && agent.profile_image) { %>
+                <img src="<%= agent.profile_image %>" alt="<%= agent.name %>" style="width:100px;height:100px;border-radius:50%;object-fit:cover;border:2px solid var(--border)">
+                <% } else { %>
+                <div style="width:100px;height:100px;border-radius:50%;background:var(--grad);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:1.5rem;color:#000"><%= agent ? agent.avatar_initials : 'AG' %></div>
+                <% } %>
+                <div class="form-group" style="width:100%">
+                  <label class="form-label">Upload Photo</label>
+                  <input type="file" name="profile_image" accept="image/jpeg,image/png,image/webp" class="form-input" style="padding:10px">
+                </div>
+                <% if (agent && agent.cover_image) { %>
+                <img src="<%= agent.cover_image %>" alt="Cover" style="width:100%;height:100px;border-radius:8px;object-fit:cover;border:1px solid var(--border)">
+                <% } %>
+                <div class="form-group" style="width:100%">
+                  <label class="form-label">Cover Image (optional)</label>
+                  <input type="file" name="cover_image" accept="image/jpeg,image/png,image/webp" class="form-input" style="padding:10px">
+                </div>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="card-header"><span class="card-title">Status & Verification</span></div>
+              <div class="card-body" style="display:flex;flex-direction:column;gap:14px">
+                <div class="form-group">
+                  <label class="form-label">Status</label>
+                  <select name="status" class="form-input">
+                    <option value="ACTIVE" <%= (!agent||agent.status==='ACTIVE')?'selected':'' %>>Active</option>
+                    <option value="SUSPENDED" <%= (agent&&agent.status==='SUSPENDED')?'selected':'' %>>Suspended</option>
+                  </select>
+                </div>
+                <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-size:.875rem;color:var(--text)">
+                  <input type="checkbox" name="is_verified" value="1" <%= (!agent||agent.is_verified)?'checked':'' %> style="accent-color:var(--cyan);width:16px;height:16px">
+                  Verified agent
+                </label>
+                <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-size:.875rem;color:var(--text)">
+                  <input type="checkbox" name="is_available" value="1" <%= (!agent||agent.is_available)?'checked':'' %> style="accent-color:var(--cyan);width:16px;height:16px">
+                  Available for hire
+                </label>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="card-body" style="display:flex;flex-direction:column;gap:10px">
+                <button type="submit" class="btn btn-primary" style="width:100%">
+                  <%= agent ? 'Save Changes' : 'Add Agent' %>
+                </button>
+                <a href="/admin/agents" class="btn btn-outline" style="width:100%;text-align:center">Cancel</a>
+              </div>
+            </div>
+
+            <% if (agent) { %>
+            <div class="card" style="border-color:rgba(255,74,74,.2)">
+              <div class="card-header"><span class="card-title" style="color:var(--red)">Danger Zone</span></div>
+              <div class="card-body">
+                <form method="POST" action="/admin/agents/<%= agent.id %>/delete" onsubmit="return confirm('Remove this agent permanently?')">
+                  <button type="submit" class="btn btn-sm" style="background:rgba(255,74,74,.1);color:var(--red);border:1px solid rgba(255,74,74,.3);width:100%">Remove Agent</button>
+                </form>
+              </div>
+            </div>
+            <% } %>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+<script src="/js/main.js"></script>
+</body>
+</html>

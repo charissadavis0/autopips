@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Wallet — AutoPips</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/main.css">
+</head>
+<body>
+<div class="app-layout">
+  <%- include('../partials/sidebar', { user, path, pendingWithdrawals: 0 }) %>
+  <div class="main-content">
+  <%- include('../partials/topbar', { user, balances: typeof balances !== 'undefined' ? balances : null, pageTitle: typeof pageTitle !== 'undefined' ? pageTitle : '' }) %>
+    <div class="page-header">
+      <h1 class="page-title">Wallet</h1>
+      <p class="page-subtitle">Manage your deposits, withdrawals and balance</p>
+    </div>
+    <div class="page-body">
+      <%- include('../partials/flash', { flash }) %>
+
+      <!-- Balance strip -->
+      <div class="balance-strip mb-6">
+        <div class="balance-item">
+          <div class="balance-label">Available</div>
+          <div class="balance-amount">$<%= balances.available %></div>
+        </div>
+        <div class="balance-item">
+          <div class="balance-label">Pending</div>
+          <div class="balance-amount pending">$<%= balances.pending %></div>
+        </div>
+        <div class="balance-item">
+          <div class="balance-label">AI Credits</div>
+          <div class="balance-amount credits">$<%= balances.aiCredits %></div>
+        </div>
+      </div>
+
+      <!-- Tabs -->
+      <div data-tabs>
+        <div class="tabs mb-6">
+          <button class="tab <%= activeTab === 'deposit' ? 'active' : '' %>" data-tab="deposit">Deposit</button>
+          <button class="tab <%= activeTab === 'withdraw' ? 'active' : '' %>" data-tab="withdraw">Withdraw</button>
+          <button class="tab <%= activeTab === 'history' ? 'active' : '' %>" data-tab="history">History</button>
+        </div>
+
+        <!-- Deposit tab -->
+        <div class="tab-panel <%= activeTab === 'deposit' ? 'active' : '' %>" data-tab="deposit">
+          <div class="card" style="max-width:520px">
+            <div class="card-header"><span class="card-title">Make a Deposit</span></div>
+            <div class="card-body">
+              <form method="POST" action="/wallet/deposit">
+                <div class="form-group">
+                  <label class="form-label">Select coin & network</label>
+                  <select class="form-select" name="payment_method_id" id="coin-select" onchange="updateAddress(this)">
+                    <option value="">-- Choose --</option>
+                    <% paymentMethods.forEach(m => { %>
+                    <option value="<%= m.id %>" data-address="<%= m.address %>" data-coin="<%= m.coin %>" data-label="<%= m.label %>">
+                      <%= m.label %>
+                    </option>
+                    <% }) %>
+                  </select>
+                </div>
+                <div id="address-section" style="display:none;margin-bottom:20px">
+                  <label class="form-label">Send to this address</label>
+                  <div class="address-box">
+                    <span class="address-text" id="deposit-address"></span>
+                    <button type="button" class="copy-btn" id="copy-addr-btn">Copy</button>
+                  </div>
+                  <p class="form-hint">Only send the selected coin to this address. Sending the wrong coin will result in permanent loss.</p>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Amount (USD equivalent)</label>
+                  <input class="form-input" type="number" name="amount" min="10" step="0.01" required placeholder="Minimum $10">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Transaction hash (after sending)</label>
+                  <input class="form-input" type="text" name="tx_hash" placeholder="Optional — paste your TX hash">
+                </div>
+                <button type="submit" class="btn btn-gold w-full">Submit Deposit</button>
+              </form>
+            </div>
+          </div>
+        </div>
+
+        <!-- Withdraw tab -->
+        <div class="tab-panel <%= activeTab === 'withdraw' ? 'active' : '' %>" data-tab="withdraw">
+          <div class="card" style="max-width:520px">
+            <div class="card-header"><span class="card-title">Withdraw Funds</span></div>
+            <div class="card-body">
+              <% if (parseFloat(balances.available) <= 0) { %>
+              <div class="alert alert-warn">You have no available balance to withdraw.</div>
+              <% } else { %>
+              <form method="POST" action="/wallet/withdraw">
+                <div class="form-group">
+                  <label class="form-label">Coin</label>
+                  <select class="form-select" name="coin">
+                    <option value="BTC">Bitcoin (BTC)</option>
+                    <option value="ETH">Ethereum (ETH)</option>
+                    <option value="USDT">USDT</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Network</label>
+                  <select class="form-select" name="network">
+                    <option value="Bitcoin">Bitcoin</option>
+                    <option value="ERC-20">ERC-20</option>
+                    <option value="TRC-20">TRC-20</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Withdrawal address</label>
+                  <input class="form-input font-mono" type="text" name="address" required placeholder="Your wallet address">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Amount (USD)</label>
+                  <input class="form-input" type="number" name="amount" min="20" max="<%= balances.available %>" step="0.01" required placeholder="Minimum $20">
+                  <p class="form-hint">Available: $<%= balances.available %> &nbsp;|&nbsp; Fee: <%= tierConfig.feePercent %>% (<%= user.tier %> tier)</p>
+                </div>
+                <button type="submit" class="btn btn-gold w-full">Submit Withdrawal</button>
+              </form>
+              <% } %>
+            </div>
+          </div>
+        </div>
+
+        <!-- History tab -->
+        <div class="tab-panel <%= activeTab === 'history' ? 'active' : '' %>" data-tab="history">
+          <div class="card">
+            <div class="card-header"><span class="card-title">Transaction History</span></div>
+            <% if (transactions.length === 0) { %>
+            <div class="empty-state"><div class="icon">&#128683;</div><p>No transactions yet.</p></div>
+            <% } else { %>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>Date</th><th>Type</th><th>Amount</th><th>Balance</th><th>Description</th></tr></thead>
+                <tbody>
+                  <% transactions.forEach(t => { %>
+                  <tr>
+                    <td class="text-muted"><%= new Date(t.created_at).toLocaleDateString() %></td>
+                    <td><%= t.type.replace(/_/g,' ') %></td>
+                    <td class="tabular-nums" style="color:<%= parseFloat(t.amount) >= 0 ? 'var(--green-mid)' : 'var(--red-risk)' %>">
+                      <%= parseFloat(t.amount) >= 0 ? '+' : '' %><%= parseFloat(t.amount).toFixed(8) %>
+                    </td>
+                    <td><span class="pill pill-<%= t.balance.toLowerCase() %>"><%= t.balance %></span></td>
+                    <td class="text-muted"><%= t.description || '—' %></td>
+                  </tr>
+                  <% }) %>
+                </tbody>
+              </table>
+            </div>
+            <% } %>
+          </div>
+
+          <!-- Deposits -->
+          <div class="card mt-6">
+            <div class="card-header"><span class="card-title">Deposit History</span></div>
+            <% if (deposits.length === 0) { %>
+            <div class="empty-state"><p>No deposits yet.</p></div>
+            <% } else { %>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>Date</th><th>Coin</th><th>Amount</th><th>Status</th></tr></thead>
+                <tbody>
+                  <% deposits.forEach(d => { %>
+                  <tr>
+                    <td class="text-muted"><%= new Date(d.created_at).toLocaleDateString() %></td>
+                    <td><%= d.coin %> / <%= d.network %></td>
+                    <td class="tabular-nums">$<%= parseFloat(d.amount).toFixed(2) %></td>
+                    <td><span class="pill pill-<%= d.status.toLowerCase() %>"><%= d.status %></span></td>
+                  </tr>
+                  <% }) %>
+                </tbody>
+              </table>
+            </div>
+            <% } %>
+          </div>
+
+          <!-- Withdrawals -->
+          <div class="card mt-6">
+            <div class="card-header"><span class="card-title">Withdrawal History</span></div>
+            <% if (withdrawals.length === 0) { %>
+            <div class="empty-state"><p>No withdrawals yet.</p></div>
+            <% } else { %>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>Date</th><th>Coin</th><th>Amount</th><th>Net</th><th>Status</th></tr></thead>
+                <tbody>
+                  <% withdrawals.forEach(w => { %>
+                  <tr>
+                    <td class="text-muted"><%= new Date(w.created_at).toLocaleDateString() %></td>
+                    <td><%= w.coin %> / <%= w.network %></td>
+                    <td class="tabular-nums">$<%= parseFloat(w.amount).toFixed(2) %></td>
+                    <td class="tabular-nums text-muted">$<%= parseFloat(w.net_amount).toFixed(2) %></td>
+                    <td><span class="pill pill-<%= w.status.toLowerCase() %>"><%= w.status %></span></td>
+                  </tr>
+                  <% }) %>
+                </tbody>
+              </table>
+            </div>
+            <% } %>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="/js/main.js"></script>
+<script>
+function updateAddress(sel) {
+  const opt = sel.options[sel.selectedIndex]
+  const addr = opt.dataset.address
+  const section = document.getElementById('address-section')
+  const addrEl = document.getElementById('deposit-address')
+  const copyBtn = document.getElementById('copy-addr-btn')
+  if (addr) {
+    addrEl.textContent = addr
+    copyBtn.dataset.copy = addr
+    copyBtn.onclick = () => { navigator.clipboard.writeText(addr); copyBtn.textContent = 'Copied!'; setTimeout(() => copyBtn.textContent = 'Copy', 1500) }
+    section.style.display = 'block'
+  } else {
+    section.style.display = 'none'
+  }
+}
+</script>
+</body>
+</html>

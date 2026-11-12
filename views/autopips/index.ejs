@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Autopips Product Catalog — AutoPips</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/main.css">
+</head>
+<body>
+<div class="app-layout">
+  <%- include('../partials/sidebar', { user, path, pendingWithdrawals: 0 }) %>
+  <div class="main-content">
+  <%- include('../partials/topbar', { user, balances: typeof balances !== 'undefined' ? balances : null, pageTitle: typeof pageTitle !== 'undefined' ? pageTitle : '' }) %>
+    <div class="page-header">
+      <div>
+        <h1 class="page-title">Autopips Catalog</h1>
+        <p class="page-subtitle">Discover curated, high-margin products ready to add to your store</p>
+      </div>
+    </div>
+    <div class="page-body">
+      <%- include('../partials/flash', { flash }) %>
+      <% if (flash.success === 'added') { %>
+        <div class="alert alert-success">Product added to your store successfully!</div>
+      <% } else if (flash.error === 'already_added') { %>
+        <div class="alert alert-warn">You already have this product in your store.</div>
+      <% } %>
+
+      <!-- Filter bar -->
+      <form method="GET" action="/autopips" style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:24px;align-items:center">
+        <input class="form-input" style="max-width:220px" type="text" name="search" placeholder="Search products..." value="<%= search %>">
+        <select class="form-select" style="max-width:180px" name="category" onchange="this.form.submit()">
+          <option value="">All Categories</option>
+          <% categories.forEach(c => { %>
+          <option value="<%= c %>" <%= category === c ? 'selected' : '' %>><%= c %></option>
+          <% }) %>
+        </select>
+        <div style="display:flex;gap:6px">
+          <a href="/autopips" class="btn btn-ghost btn-sm <%= !filter ? 'active-filter' : '' %>">All</a>
+          <a href="/autopips?filter=featured" class="btn btn-ghost btn-sm <%= filter==='featured' ? 'active-filter' : '' %>">Featured</a>
+          <a href="/autopips?filter=trending" class="btn btn-ghost btn-sm <%= filter==='trending' ? 'active-filter' : '' %>">&#9650; Trending</a>
+        </div>
+        <button type="submit" class="btn btn-outline btn-sm">Search</button>
+      </form>
+
+      <!-- Products grid -->
+      <% if (products.length === 0) { %>
+      <div class="empty-state">
+        <div class="icon">&#128683;</div>
+        <p>No products found. Try a different search or category.</p>
+      </div>
+      <% } else { %>
+      <div class="product-grid">
+        <% products.forEach(p => { %>
+        <% const images = JSON.parse(p.images || '[]'); const isAdded = myProductIds.includes(p.id) %>
+        <div class="product-card">
+          <div class="product-img">
+            <% if (images.length > 0 && !images[0].includes('/img/products/')) { %>
+              <img src="<%= images[0] %>" alt="<%= p.name %>" style="width:100%;height:100%;object-fit:cover">
+            <% } else { %>
+              <div class="product-img-placeholder">
+                <% if (p.category === 'Electronics') { %>&#127911;
+                <% } else if (p.category === 'Beauty & Skincare') { %>&#10024;
+                <% } else if (p.category === 'Health & Fitness') { %>&#127947;
+                <% } else if (p.category === 'Home & Office') { %>&#127968;
+                <% } else if (p.category === 'Kids & Toys') { %>&#127873;
+                <% } else if (p.category === 'Pet Supplies') { %>&#128062;
+                <% } else { %>&#128230;<% } %>
+              </div>
+            <% } %>
+            <% if (p.is_trending) { %><span class="product-badge trending">&#9650; Trending</span><% } %>
+            <% if (p.is_featured) { %><span class="product-badge featured">&#11088; Featured</span><% } %>
+          </div>
+          <div class="product-info">
+            <div class="product-category"><%= p.category %></div>
+            <div class="product-name"><%= p.name %></div>
+            <p class="product-desc"><%= p.short_desc %></p>
+            <div class="product-pricing">
+              <div>
+                <div class="product-price">$<%= parseFloat(p.suggested_price).toFixed(2) %></div>
+                <div class="product-cost">Cost $<%= parseFloat(p.cost).toFixed(2) %></div>
+              </div>
+              <div class="product-margin"><%= p.profit_margin %>% margin</div>
+            </div>
+            <div class="product-meta">
+              <span class="product-score" title="Opportunity Score">&#9679; <%= p.opportunity_score %>/100</span>
+              <span class="product-ship"><%= p.shipping_days_min %>–<%= p.shipping_days_max %> days</span>
+            </div>
+            <% if (isAdded) { %>
+              <div class="btn btn-outline btn-sm w-full" style="margin-top:12px;text-align:center;cursor:default">&#10003; In Your Store</div>
+            <% } else { %>
+              <form method="POST" action="/autopips/add/<%= p.id %>">
+                <button type="submit" class="btn btn-primary btn-sm w-full" style="margin-top:12px">+ Add to Store</button>
+              </form>
+            <% } %>
+          </div>
+        </div>
+        <% }) %>
+      </div>
+      <% } %>
+    </div>
+  </div>
+</div>
+<script src="/js/main.js"></script>
+</body>
+</html>

@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Admin — AutoPips</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/main.css">
+</head>
+<body>
+<div class="app-layout">
+  <%- include('../partials/sidebar', { user, path, pendingWithdrawals: stats.pendingWithdrawals }) %>
+  <div class="main-content">
+  <%- include('../partials/topbar', { user, balances: typeof balances !== 'undefined' ? balances : null, pageTitle: typeof pageTitle !== 'undefined' ? pageTitle : '' }) %>
+    <div class="page-header">
+      <h1 class="page-title">Admin Overview</h1>
+      <p class="page-subtitle">Platform health at a glance</p>
+    </div>
+    <div class="page-body">
+      <%- include('../partials/flash', { flash }) %>
+      <div class="grid-4 mb-6">
+        <div class="stat-card"><div class="stat-label">Total Users</div><div class="stat-value"><%= stats.totalUsers %></div></div>
+        <div class="stat-card"><div class="stat-label">Pending Withdrawals</div><div class="stat-value" style="color:var(--red-risk)"><%= stats.pendingWithdrawals %></div></div>
+        <div class="stat-card"><div class="stat-label">Pending Deposits</div><div class="stat-value gold"><%= stats.pendingDeposits %></div></div>
+        <div class="stat-card"><div class="stat-label">Total Available</div><div class="stat-value green">$<%= stats.totalAvailable %></div></div>
+      </div>
+      <div class="grid-3 mb-6">
+        <a href="/admin/withdrawals?status=SUBMITTED" class="stat-card" style="display:block;text-decoration:none;cursor:pointer">
+          <div class="stat-label">Submitted Withdrawals</div>
+          <div class="stat-value" style="color:var(--gold)"><%= stats.pendingWithdrawals %></div>
+          <p class="text-sm mt-2" style="color:var(--gold)">Review now &#8594;</p>
+        </a>
+        <a href="/admin/users" class="stat-card" style="display:block;text-decoration:none">
+          <div class="stat-label">Manage Users</div>
+          <div class="stat-value"><%= stats.totalUsers %></div>
+          <p class="text-sm mt-2" style="color:var(--gold)">View all &#8594;</p>
+        </a>
+        <a href="/admin/audit" class="stat-card" style="display:block;text-decoration:none">
+          <div class="stat-label">Audit Log</div>
+          <div class="stat-value"><%= stats.totalAuditLogs %></div>
+          <p class="text-sm mt-2" style="color:var(--gold)">View log &#8594;</p>
+        </a>
+      </div>
+
+      <!-- Recent audit log -->
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">Recent Admin Actions</span>
+          <a href="/admin/audit" class="btn btn-ghost btn-sm">View all</a>
+        </div>
+        <% if (recentAudit.length === 0) { %>
+        <div class="empty-state"><p>No admin actions yet.</p></div>
+        <% } else { %>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Admin</th><th>Action</th><th>Target</th><th>Date</th></tr></thead>
+            <tbody>
+              <% recentAudit.forEach(a => { %>
+              <tr>
+                <td><%= a.admin_email %></td>
+                <td><span class="pill pill-review"><%= a.action.replace(/_/g,' ') %></span></td>
+                <td class="font-mono text-muted text-xs"><%= a.target_id ? a.target_id.slice(0,14) + '…' : '—' %></td>
+                <td class="text-muted"><%= new Date(a.created_at).toLocaleDateString() %></td>
+              </tr>
+              <% }) %>
+            </tbody>
+          </table>
+        </div>
+        <% } %>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="/js/main.js"></script>
+</body>
+</html>

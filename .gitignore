@@ -1,0 +1,37 @@
+# Dependencies
+node_modules/
+
+# Environment — never commit secrets
+.env
+.env.local
+
+# SQLite local dev databases
+db/*.db
+db/*.db-shm
+db/*.db-wal
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+
+# Local uploads (dev only — production uses Vercel Blob)
+public/uploads/
+
+# Claude Code
+.agents/
+.claude/
+skills-lock.json
+
+# Misc
+.npm
+.eslintcache
+.node_repl_history
+*.tgz
+.yarn-integrity
+coverage/
+.nyc_output/
+build/Release/
+
+.vercel
+.env*

@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title><%= product ? 'Edit Product' : 'Add Product' %> — Admin</title>
+  <style>
+    .gallery-grid { display:grid;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:10px;margin-top:12px }
+    .gallery-item { position:relative }
+    .gallery-item img { width:100%;height:90px;object-fit:cover;border-radius:8px;border:1px solid var(--border) }
+    .gallery-remove { position:absolute;top:4px;right:4px;background:rgba(255,74,74,.85);border-radius:50%;width:20px;height:20px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:10px;color:#fff;border:none }
+  </style>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/main.css">
+</head>
+<body>
+<div class="app-layout">
+  <%- include('../../partials/sidebar', { user, path, pendingWithdrawals }) %>
+  <div class="main-content">
+  <%- include('../../partials/topbar', { user, balances: typeof balances !== 'undefined' ? balances : null, pageTitle: typeof pageTitle !== 'undefined' ? pageTitle : '' }) %>
+    <div class="page-header">
+      <div style="display:flex;align-items:center;gap:12px">
+        <a href="/admin/products" class="btn btn-ghost btn-sm">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+          Back
+        </a>
+        <h1 class="page-title" style="margin:0"><%= product ? 'Edit Product' : 'Add Product' %></h1>
+      </div>
+    </div>
+    <div class="page-body">
+      <%- include('../../partials/flash', { flash }) %>
+      <% if (typeof query !== 'undefined' && query && query.err) { %>
+      <div class="flash flash-error"><%= query.err %></div>
+      <% } %>
+
+      <form method="POST" action="<%= product ? '/admin/products/' + product.id : '/admin/products' %>" enctype="multipart/form-data">
+        <div style="display:grid;grid-template-columns:2fr 1fr;gap:20px">
+
+          <!-- Left column -->
+          <div style="display:flex;flex-direction:column;gap:16px">
+            <div class="card">
+              <div class="card-header"><span class="card-title">Basic Information</span></div>
+              <div class="card-body" style="display:flex;flex-direction:column;gap:14px">
+                <div class="form-group">
+                  <label class="form-label">Product Name *</label>
+                  <input type="text" name="name" class="form-input" value="<%= product ? product.name : '' %>" required placeholder="e.g. Wireless Noise-Cancelling Headphones">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Short Description</label>
+                  <input type="text" name="short_desc" class="form-input" value="<%= product ? product.short_desc : '' %>" placeholder="One-line summary">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Full Description</label>
+                  <textarea name="description" class="form-input" rows="5" placeholder="Detailed product description..."><%= product ? product.description : '' %></textarea>
+                </div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+                  <div class="form-group">
+                    <label class="form-label">Category *</label>
+                    <input type="text" name="category" class="form-input" value="<%= product ? product.category : '' %>" required placeholder="e.g. Electronics">
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">Tags (JSON array)</label>
+                    <input type="text" name="tags" class="form-input" value='<%= product ? product.tags : "[]" %>' placeholder='["wireless","audio"]'>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="card-header"><span class="card-title">Pricing & Profitability</span></div>
+              <div class="card-body" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">
+                <div class="form-group">
+                  <label class="form-label">Cost Price ($)</label>
+                  <input type="number" name="cost" class="form-input" step="0.01" value="<%= product ? product.cost : '0.00' %>" placeholder="0.00">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Suggested Selling Price ($)</label>
+                  <input type="number" name="suggested_price" class="form-input" step="0.01" value="<%= product ? product.suggested_price : '0.00' %>" placeholder="0.00">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Profit Margin (%)</label>
+                  <input type="number" name="profit_margin" class="form-input" step="0.1" value="<%= product ? product.profit_margin : '0' %>" placeholder="0">
+                </div>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="card-header"><span class="card-title">Supplier & Shipping</span></div>
+              <div class="card-body" style="display:flex;flex-direction:column;gap:14px">
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+                  <div class="form-group">
+                    <label class="form-label">Supplier Name</label>
+                    <input type="text" name="supplier_name" class="form-input" value="<%= product ? product.supplier_name : '' %>" placeholder="e.g. AliExpress Supplier">
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">Supplier Country</label>
+                    <input type="text" name="supplier_country" class="form-input" value="<%= product ? product.supplier_country : '' %>" placeholder="e.g. China">
+                  </div>
+                </div>
+                <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">
+                  <div class="form-group">
+                    <label class="form-label">Shipping Estimate</label>
+                    <input type="text" name="shipping_estimate" class="form-input" value="<%= product ? product.shipping_estimate : '' %>" placeholder="e.g. $3.50">
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">Min Delivery Days</label>
+                    <input type="number" name="shipping_days_min" class="form-input" value="<%= product ? product.shipping_days_min : '7' %>">
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">Max Delivery Days</label>
+                    <input type="number" name="shipping_days_max" class="form-input" value="<%= product ? product.shipping_days_max : '21' %>">
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="card-header"><span class="card-title">Product Images</span></div>
+              <div class="card-body" style="display:flex;flex-direction:column;gap:14px">
+                <div>
+                  <label class="form-label">Upload Images</label>
+                  <p style="font-size:.8125rem;color:var(--text3);margin-bottom:8px">Select multiple files. Max 10 images, 8MB each. JPG, PNG or WebP.</p>
+                  <input type="file" name="product_images" multiple accept="image/jpeg,image/png,image/webp" class="form-input" style="padding:10px">
+                </div>
+                <% if (product) { %>
+                  <% let imgs = []; try { imgs = JSON.parse(product.images || '[]') } catch(_) {} %>
+                  <% if (imgs.length > 0) { %>
+                  <div>
+                    <label class="form-label">Current Images</label>
+                    <p style="font-size:.75rem;color:var(--text3);margin-bottom:6px">Check images to remove them on save.</p>
+                    <div class="gallery-grid">
+                      <% imgs.forEach(img => { %>
+                      <div class="gallery-item">
+                        <img src="<%= img %>" alt="Product" loading="lazy">
+                        <label class="gallery-remove" title="Remove">
+                          <input type="checkbox" name="remove_images" value="<%= img %>" style="display:none">✕
+                        </label>
+                      </div>
+                      <% }) %>
+                    </div>
+                  </div>
+                  <% } %>
+                <% } %>
+                <div>
+                  <label class="form-label">Or add by URL (JSON array)</label>
+                  <input type="text" name="image_urls" class="form-input" value="[]" placeholder='["https://example.com/img1.jpg"]'>
+                </div>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="card-header"><span class="card-title">Variations</span></div>
+              <div class="card-body">
+                <label class="form-label">Variations (JSON array)</label>
+                <textarea name="variations" class="form-input" rows="3" placeholder='[{"name":"Color","options":["Black","White"]},{"name":"Size","options":["S","M","L"]}]'><%= product ? product.variations : '[]' %></textarea>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right column -->
+          <div style="display:flex;flex-direction:column;gap:16px">
+            <div class="card">
+              <div class="card-header"><span class="card-title">Status & Visibility</span></div>
+              <div class="card-body" style="display:flex;flex-direction:column;gap:14px">
+                <div class="form-group">
+                  <label class="form-label">Status</label>
+                  <select name="status" class="form-input">
+                    <option value="DRAFT" <%= (!product||product.status==='DRAFT')?'selected':'' %>>Draft</option>
+                    <option value="PUBLISHED" <%= (product&&product.status==='PUBLISHED')?'selected':'' %>>Published</option>
+                    <option value="ARCHIVED" <%= (product&&product.status==='ARCHIVED')?'selected':'' %>>Archived</option>
+                  </select>
+                  <p style="font-size:.75rem;color:var(--text3);margin-top:4px">Only Published products appear in the user catalog.</p>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Stock Status</label>
+                  <select name="stock_status" class="form-input">
+                    <option value="IN_STOCK" <%= (!product||product.stock_status==='IN_STOCK')?'selected':'' %>>In Stock</option>
+                    <option value="LOW_STOCK" <%= (product&&product.stock_status==='LOW_STOCK')?'selected':'' %>>Low Stock</option>
+                    <option value="OUT_OF_STOCK" <%= (product&&product.stock_status==='OUT_OF_STOCK')?'selected':'' %>>Out of Stock</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Opportunity Score (0–100)</label>
+                  <input type="number" name="opportunity_score" class="form-input" min="0" max="100" value="<%= product ? product.opportunity_score : '70' %>">
+                </div>
+                <div style="display:flex;flex-direction:column;gap:10px">
+                  <label class="form-label" style="margin-bottom:0">Flags</label>
+                  <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-size:.875rem;color:var(--text)">
+                    <input type="checkbox" name="is_featured" value="1" <%= (product&&product.is_featured)?'checked':'' %> style="accent-color:var(--cyan);width:16px;height:16px">
+                    Featured product
+                  </label>
+                  <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-size:.875rem;color:var(--text)">
+                    <input type="checkbox" name="is_trending" value="1" <%= (product&&product.is_trending)?'checked':'' %> style="accent-color:var(--cyan);width:16px;height:16px">
+                    Trending product
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="card-body" style="display:flex;flex-direction:column;gap:10px">
+                <button type="submit" class="btn btn-primary" style="width:100%">
+                  <%= product ? 'Save Changes' : 'Create Product' %>
+                </button>
+                <a href="/admin/products" class="btn btn-outline" style="width:100%;text-align:center">Cancel</a>
+              </div>
+            </div>
+
+            <% if (product) { %>
+            <div class="card" style="border-color:rgba(255,74,74,.2)">
+              <div class="card-header"><span class="card-title" style="color:var(--red)">Danger Zone</span></div>
+              <div class="card-body">
+                <p style="font-size:.8125rem;color:var(--text2);margin-bottom:12px">This will permanently delete the product and remove it from all strategies.</p>
+                <form method="POST" action="/admin/products/<%= product.id %>/delete" onsubmit="return confirm('Delete this product permanently?')">
+                  <button type="submit" class="btn btn-sm" style="background:rgba(255,74,74,.1);color:var(--red);border:1px solid rgba(255,74,74,.3);width:100%">Delete Product</button>
+                </form>
+              </div>
+            </div>
+            <% } %>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+<script src="/js/main.js"></script>
+</body>
+</html>

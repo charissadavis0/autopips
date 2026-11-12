@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Deposit Wallets — Admin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/main.css">
+</head>
+<body>
+<div class="app-layout">
+  <%- include('../../partials/sidebar', { user, path, pendingWithdrawals }) %>
+  <div class="main-content">
+  <%- include('../../partials/topbar', { user, balances: null, pageTitle: '' }) %>
+    <div class="page-header">
+      <div style="display:flex;justify-content:space-between;align-items:center;width:100%">
+        <div>
+          <h1 class="page-title">Deposit Wallets</h1>
+          <p class="page-subtitle">Manage cryptocurrency deposit addresses shown to users</p>
+        </div>
+        <a href="/admin/wallets/new" class="btn btn-primary btn-sm">+ Add Wallet</a>
+      </div>
+    </div>
+    <div class="page-body">
+      <%- include('../../partials/flash', { flash }) %>
+
+      <div class="info-banner" style="margin-bottom:20px">
+        <span class="info-banner-icon">⚠️</span>
+        <div>
+          <strong style="color:var(--text-hi);display:block;margin-bottom:3px">Important — Wallet Security</strong>
+          Never use the same wallet address for different networks unless genuinely compatible. Clearly warn users about network mismatches. Deposits are not auto-confirmed from screenshots — only approve after blockchain verification.
+        </div>
+      </div>
+
+      <% if (methods.length === 0) { %>
+      <div class="empty-state">
+        <div class="icon">💳</div>
+        <p>No deposit wallets configured yet.</p>
+        <a href="/admin/wallets/new" class="btn btn-primary btn-sm" style="margin-top:12px">Add First Wallet</a>
+      </div>
+      <% } else { %>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:16px">
+        <% methods.forEach(m => { %>
+        <div class="card" style="<%= !m.enabled ? 'opacity:.5' : '' %>">
+          <div class="card-header">
+            <div style="display:flex;align-items:center;gap:10px">
+              <div style="width:36px;height:36px;border-radius:4px;background:rgba(59,110,246,.15);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.75rem;color:#93c5fd"><%= m.coin %></div>
+              <div>
+                <div style="font-weight:700;color:#fff;font-size:.9rem"><%= m.label || m.coin + ' (' + m.network + ')' %></div>
+                <div style="font-size:.75rem;color:var(--text3)"><%= m.network %></div>
+              </div>
+            </div>
+            <span class="pill <%= m.enabled ? 'pill-active' : 'pill-inactive' %>"><%= m.enabled ? 'Enabled' : 'Disabled' %></span>
+          </div>
+          <div class="card-body" style="display:flex;gap:14px">
+            <% if (m.qr_code) { %>
+            <img src="<%= m.qr_code %>" alt="QR" style="width:72px;height:72px;border-radius:4px;border:1px solid var(--border);flex-shrink:0">
+            <% } %>
+            <div style="flex:1;min-width:0">
+              <div style="font-size:.7rem;color:var(--text3);margin-bottom:4px;text-transform:uppercase;letter-spacing:.06em">Wallet Address</div>
+              <div style="font-family:monospace;font-size:.78rem;color:var(--text2);word-break:break-all;margin-bottom:8px"><%= m.address %></div>
+              <% if (m.network_warning) { %>
+              <div style="font-size:.75rem;color:var(--gold);background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.2);border-radius:4px;padding:5px 8px;margin-bottom:8px">⚠ <%= m.network_warning %></div>
+              <% } %>
+              <div style="font-size:.75rem;color:var(--text3)">Min deposit: $<%= m.min_deposit || 10 %></div>
+            </div>
+          </div>
+          <div style="padding:12px 20px;border-top:1px solid var(--border);display:flex;gap:8px">
+            <a href="/admin/wallets/<%= m.id %>/edit" class="btn btn-outline btn-sm">Edit</a>
+            <form method="POST" action="/admin/wallets/<%= m.id %>/toggle" style="display:inline">
+              <button class="btn btn-sm" style="background:rgba(255,255,255,.04);color:var(--text2);border:1px solid var(--border)"><%= m.enabled ? 'Disable' : 'Enable' %></button>
+            </form>
+            <form method="POST" action="/admin/wallets/<%= m.id %>/delete" onsubmit="return confirm('Remove this wallet permanently?')" style="margin-left:auto">
+              <button class="btn btn-sm" style="background:rgba(239,68,68,.08);color:var(--red);border:1px solid rgba(239,68,68,.2)">Remove</button>
+            </form>
+          </div>
+        </div>
+        <% }) %>
+      </div>
+      <% } %>
+    </div>
+  </div>
+</div>
+<script src="/js/main.js"></script>
+</body>
+</html>

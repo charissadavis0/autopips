@@ -1,0 +1,5 @@
+const db = require('../db/database')
+const r = db.prepare("UPDATE products SET status='PUBLISHED' WHERE status='DRAFT'").run()
+console.log('Published', r.changes, 'products')
+const counts = db.prepare("SELECT status, COUNT(*) c FROM products GROUP BY status").all()
+counts.forEach(c => console.log(' ', c.status, ':', c.c))

@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title><%= method ? 'Edit Wallet' : 'Add Wallet' %> — Admin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/main.css">
+</head>
+<body>
+<div class="app-layout">
+  <%- include('../../partials/sidebar', { user, path, pendingWithdrawals }) %>
+  <div class="main-content">
+  <%- include('../../partials/topbar', { user, balances: null, pageTitle: '' }) %>
+    <div class="page-header">
+      <div style="display:flex;align-items:center;gap:12px">
+        <a href="/admin/wallets" class="btn btn-ghost btn-sm">← Back</a>
+        <h1 class="page-title" style="margin:0"><%= method ? 'Edit Wallet' : 'Add Deposit Wallet' %></h1>
+      </div>
+    </div>
+    <div class="page-body">
+      <%- include('../../partials/flash', { flash }) %>
+
+      <div style="max-width:640px">
+        <form method="POST" action="<%= method ? '/admin/wallets/' + method.id : '/admin/wallets' %>" enctype="multipart/form-data">
+          <div style="display:flex;flex-direction:column;gap:16px">
+
+            <div class="card">
+              <div class="card-header"><span class="card-title">Wallet Details</span></div>
+              <div class="card-body" style="display:flex;flex-direction:column;gap:14px">
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+                  <div class="form-group">
+                    <label class="form-label">Cryptocurrency *</label>
+                    <input type="text" name="coin" class="form-input" value="<%= method ? method.coin : '' %>" required placeholder="e.g. USDT, BTC, ETH">
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">Network *</label>
+                    <input type="text" name="network" class="form-input" value="<%= method ? method.network : '' %>" required placeholder="e.g. TRC-20, ERC-20, Bitcoin">
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Display Label</label>
+                  <input type="text" name="label" class="form-input" value="<%= method ? method.label : '' %>" placeholder="e.g. USDT (TRC-20)">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Wallet Address *</label>
+                  <input type="text" name="address" class="form-input" value="<%= method ? method.address : '' %>" required placeholder="Enter full wallet address">
+                  <p class="form-hint">Double-check this address. Deposits sent to wrong address are unrecoverable.</p>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Minimum Deposit ($)</label>
+                  <input type="number" name="min_deposit" class="form-input" step="0.01" value="<%= method ? method.min_deposit : '10' %>" placeholder="10">
+                </div>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="card-header"><span class="card-title">Instructions & Warnings</span></div>
+              <div class="card-body" style="display:flex;flex-direction:column;gap:14px">
+                <div class="form-group">
+                  <label class="form-label">Payment Instructions</label>
+                  <textarea name="instructions" class="form-input" rows="4" placeholder="Step-by-step instructions for making a deposit..."><%= method ? (method.instructions||'') : '' %></textarea>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Network Warning</label>
+                  <input type="text" name="network_warning" class="form-input" value="<%= method ? (method.network_warning||'') : '' %>" placeholder="e.g. Only send via TRC-20. Sending via other networks will result in permanent loss.">
+                  <p class="form-hint">Shown prominently to users before they deposit. Leave blank if no special warning needed.</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="card-header"><span class="card-title">QR Code</span></div>
+              <div class="card-body" style="display:flex;flex-direction:column;gap:14px">
+                <% if (method && method.qr_code) { %>
+                <div style="display:flex;align-items:center;gap:14px">
+                  <img src="<%= method.qr_code %>" alt="QR" style="width:100px;height:100px;border-radius:4px;border:1px solid var(--border)">
+                  <div>
+                    <form method="POST" action="/admin/wallets/<%= method.id %>/delete-qr" onsubmit="return confirm('Remove QR code?')">
+                      <button class="btn btn-sm" style="background:rgba(239,68,68,.08);color:var(--red);border:1px solid rgba(239,68,68,.2)">Remove QR</button>
+                    </form>
+                  </div>
+                </div>
+                <% } %>
+                <div class="form-group">
+                  <label class="form-label">Upload QR Code Image</label>
+                  <input type="file" name="qr_code" accept="image/jpeg,image/png,image/webp" class="form-input" style="padding:10px">
+                  <p class="form-hint">PNG or JPG. Max 2MB. This QR code is shown to users when making a deposit.</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="card-header"><span class="card-title">Visibility</span></div>
+              <div class="card-body">
+                <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-size:.875rem;color:var(--text)">
+                  <input type="checkbox" name="enabled" value="1" <%= (!method || method.enabled) ? 'checked' : '' %> style="accent-color:var(--brand);width:16px;height:16px">
+                  Enabled — visible to users on the deposit page
+                </label>
+              </div>
+            </div>
+
+            <div style="display:flex;gap:10px">
+              <button type="submit" class="btn btn-primary"><%= method ? 'Save Changes' : 'Add Wallet' %></button>
+              <a href="/admin/wallets" class="btn btn-outline">Cancel</a>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="/js/main.js"></script>
+</body>
+</html>

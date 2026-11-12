@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Launch My Business — AutoPips</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/main.css">
+</head>
+<body>
+<div class="app-layout">
+  <%- include('../partials/sidebar', { user, path, pendingWithdrawals: 0 }) %>
+  <div class="main-content">
+  <%- include('../partials/topbar', { user, balances: typeof balances !== 'undefined' ? balances : null, pageTitle: typeof pageTitle !== 'undefined' ? pageTitle : '' }) %>
+    <div class="page-header">
+      <div>
+        <h1 class="page-title">Launch My Business</h1>
+        <p class="page-subtitle">The fastest path to your first dropshipping store</p>
+      </div>
+    </div>
+    <div class="page-body">
+      <!-- 4 steps -->
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:36px">
+        <div class="step-mini"><div class="step-mini-num">1</div><div class="step-mini-text">Choose Strategy</div></div>
+        <div class="step-mini"><div class="step-mini-num">2</div><div class="step-mini-text">Add Products</div></div>
+        <div class="step-mini"><div class="step-mini-num">3</div><div class="step-mini-text">Hire Agent (optional)</div></div>
+        <div class="step-mini"><div class="step-mini-num">4</div><div class="step-mini-text">Fund &amp; Launch</div></div>
+      </div>
+
+      <!-- Step 1: Choose strategy -->
+      <div class="card mb-6">
+        <div class="card-header"><span class="card-title">Step 1 — Choose a Ready-Made Strategy</span></div>
+        <div class="card-body">
+          <p style="color:var(--text2);font-size:.875rem;margin-bottom:16px">Pick a strategy built by our team. It includes a product selection, marketing plan, and growth playbook.</p>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+            <% strategies.forEach(s => { %>
+            <div style="background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:14px;cursor:pointer" onclick="document.getElementById('copy-form-<%= s.id %>').submit()">
+              <div style="display:flex;justify-content:space-between;margin-bottom:6px">
+                <span class="strategy-niche-badge"><%= s.niche %></span>
+                <span class="strategy-difficulty difficulty-<%= s.difficulty.toLowerCase() %>"><%= s.difficulty %></span>
+              </div>
+              <div style="font-weight:600;color:#fff;font-size:.9rem;margin-bottom:4px"><%= s.name %></div>
+              <div style="font-size:.8rem;color:var(--text3)">From $<%= s.estimated_budget %> &nbsp;|&nbsp; <%= s.times_copied %> copies</div>
+              <form id="copy-form-<%= s.id %>" method="POST" action="/strategies/copy/<%= s.id %>">
+                <input type="hidden" name="business_name" value="<%= s.niche %> Store">
+              </form>
+            </div>
+            <% }) %>
+          </div>
+          <div style="margin-top:16px;text-align:center">
+            <a href="/strategies" style="color:var(--cyan);font-size:.875rem">View all strategies &#8594;</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 2 -->
+      <div class="card mb-6">
+        <div class="card-header"><span class="card-title">Step 2 — Add Products to Your Store</span></div>
+        <div class="card-body">
+          <p style="color:var(--text2);font-size:.875rem;margin-bottom:16px">Browse our curated Autopips catalog and add high-margin products in one click.</p>
+          <a href="/autopips" class="btn btn-outline">Browse Autopips Catalog &#8594;</a>
+        </div>
+      </div>
+
+      <!-- Step 3 -->
+      <div class="card mb-6">
+        <div class="card-header"><span class="card-title">Step 3 — Hire an Agent (Recommended)</span></div>
+        <div class="card-body">
+          <p style="color:var(--text2);font-size:.875rem;margin-bottom:16px">Don't want to manage everything yourself? Hire a verified platform agent to handle store setup, social media, content creation, and advertising.</p>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
+            <% agents.forEach(a => { %>
+            <div style="background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:14px">
+              <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+                <div class="agent-avatar" style="width:36px;height:36px;font-size:.8rem"><%= a.avatar_initials %></div>
+                <div>
+                  <div style="font-weight:600;color:#fff;font-size:.875rem"><%= a.name %></div>
+                  <div style="font-size:.78rem;color:var(--gold)">&#9733; <%= a.rating %></div>
+                </div>
+              </div>
+              <div style="font-size:.8rem;color:var(--cyan)">$<%= a.base_fee %>/month</div>
+              <a href="/agents/<%= a.id %>/hire" class="btn btn-outline btn-sm" style="margin-top:10px;width:100%;text-align:center;display:block">Hire</a>
+            </div>
+            <% }) %>
+          </div>
+          <a href="/agents" style="color:var(--cyan);font-size:.875rem">View all agents &#8594;</a>
+        </div>
+      </div>
+
+      <!-- Step 4 -->
+      <div class="card">
+        <div class="card-header"><span class="card-title">Step 4 — Fund Your Wallet &amp; Launch</span></div>
+        <div class="card-body">
+          <div class="balance-strip" style="margin-bottom:16px">
+            <div class="balance-item"><div class="balance-label">Available Balance</div><div class="balance-amount">$<%= balances.available %></div></div>
+            <div class="balance-item"><div class="balance-label">AI Credits</div><div class="balance-amount credits">$<%= balances.aiCredits %></div></div>
+          </div>
+          <p style="color:var(--text2);font-size:.875rem;margin-bottom:16px">Fund your wallet to pay your agent, generate AI videos, and power your advertising. All payments are made in crypto — fast, secure, and global.</p>
+          <a href="/wallet?tab=deposit" class="btn btn-primary">Deposit Funds &#8594;</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="/js/main.js"></script>
+</body>
+</html>

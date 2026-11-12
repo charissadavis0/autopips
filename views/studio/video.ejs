@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>AI Video Studio — AutoPips</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/main.css">
+</head>
+<body>
+<div class="app-layout">
+  <%- include('../partials/sidebar', { user, path, pendingWithdrawals: 0 }) %>
+  <div class="main-content">
+  <%- include('../partials/topbar', { user, balances: typeof balances !== 'undefined' ? balances : null, pageTitle: typeof pageTitle !== 'undefined' ? pageTitle : '' }) %>
+    <div class="page-header">
+      <div>
+        <h1 class="page-title">AI Video Studio</h1>
+        <p class="page-subtitle">Request product videos from your hired agent — funded from your wallet</p>
+      </div>
+    </div>
+    <div class="page-body">
+      <%- include('../partials/flash', { flash }) %>
+      <% if (flash.success === 'requested') { %><div class="alert alert-success">Video request sent! Your agent will deliver it and you'll be notified.</div><% } %>
+      <% if (flash.error === 'insufficient_balance') { %><div class="alert alert-error">Insufficient wallet balance. <a href="/wallet?tab=deposit" style="color:var(--gold)">Top up your wallet</a> first.</div><% } %>
+      <% if (flash.error === 'no_agent') { %><div class="alert alert-warn">You need to hire an agent first before requesting videos. <a href="/agents" style="color:var(--cyan)">Find an agent</a>.</div><% } %>
+
+      <% if (myAgents.length === 0) { %>
+      <!-- No agent state -->
+      <div class="card" style="max-width:520px;text-align:center;padding:40px">
+        <div style="font-size:2.5rem;margin-bottom:16px">&#127916;</div>
+        <h3 style="color:#fff;font-size:1.1rem;margin-bottom:8px">Your agent creates the videos</h3>
+        <p style="color:var(--text2);margin-bottom:20px;font-size:.9rem">The AI Video Studio works through your hired platform agent. You submit a brief, credit your agent from your wallet, and they produce and deliver the video for your store.</p>
+        <a href="/agents" class="btn btn-primary">Find &amp; Hire an Agent</a>
+      </div>
+      <% } else { %>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px">
+        <!-- Request form -->
+        <div>
+          <div class="card">
+            <div class="card-header"><span class="card-title">New Video Request</span></div>
+            <div class="card-body">
+              <form method="POST" action="/studio/video/request" id="video-form">
+                <div class="form-group">
+                  <label class="form-label">Select Agent</label>
+                  <div style="display:flex;flex-direction:column;gap:8px">
+                    <% myAgents.forEach(a => { %>
+                    <label class="agent-select-option">
+                      <input type="radio" name="assignment_id" value="<%= a.id %>" required onchange="updateRate(<%= a.video_rate %>)">
+                      <div class="agent-select-info">
+                        <div class="agent-avatar" style="width:36px;height:36px;font-size:.8rem;flex-shrink:0"><%= a.avatar_initials %></div>
+                        <div>
+                          <div style="font-weight:600;color:#fff;font-size:.875rem"><%= a.agent_name %></div>
+                          <div style="color:var(--cyan);font-size:.8rem">$<%= a.video_rate %> per video</div>
+                        </div>
+                      </div>
+                    </label>
+                    <% }) %>
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Product (optional)</label>
+                  <select class="form-select" name="product_id">
+                    <option value="">— General / No specific product —</option>
+                    <% myProducts.forEach(p => { %>
+                    <option value="<%= p.product_id %>"><%= p.product_name %></option>
+                    <% }) %>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Platform</label>
+                  <select class="form-select" name="platform" required>
+                    <option value="TikTok">TikTok (9:16 vertical)</option>
+                    <option value="Instagram Reels">Instagram Reels (9:16)</option>
+                    <option value="YouTube Shorts">YouTube Shorts (9:16)</option>
+                    <option value="Instagram Feed">Instagram Feed (1:1)</option>
+                    <option value="Facebook">Facebook Ad (16:9)</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Video Style</label>
+                  <select class="form-select" name="style" required>
+                    <option value="Product Showcase">Product Showcase</option>
+                    <option value="UGC-style Ad">UGC-style Ad</option>
+                    <option value="Before & After">Before &amp; After</option>
+                    <option value="Testimonial Style">Testimonial Style</option>
+                    <option value="Promotional">Promotional / Sale</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Duration</label>
+                  <select class="form-select" name="duration">
+                    <option value="15s">15 seconds</option>
+                    <option value="30s" selected>30 seconds</option>
+                    <option value="60s">60 seconds</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Brief / Additional Instructions</label>
+                  <textarea class="form-textarea" name="description" placeholder="Describe what you want: key messages, tone, audience, special instructions..."></textarea>
+                </div>
+                <div class="form-group" style="background:var(--bg3);border-radius:8px;padding:14px;border:1px solid var(--border)">
+                  <div style="display:flex;justify-content:space-between;font-size:.875rem">
+                    <span style="color:var(--text2)">Estimated cost</span>
+                    <span style="color:var(--cyan);font-weight:700" id="rate-display">Select agent above</span>
+                  </div>
+                  <div style="display:flex;justify-content:space-between;font-size:.8rem;margin-top:6px">
+                    <span style="color:var(--text3)">Your balance</span>
+                    <span style="color:var(--text2)">$<%= balances.available %></span>
+                  </div>
+                </div>
+                <button type="submit" class="btn btn-primary w-full" style="margin-top:4px">Send Video Request</button>
+              </form>
+            </div>
+          </div>
+        </div>
+
+        <!-- Task history -->
+        <div>
+          <div class="card">
+            <div class="card-header"><span class="card-title">Video Requests</span></div>
+            <% if (myTasks.length === 0) { %>
+            <div class="empty-state"><p>No video requests yet.</p></div>
+            <% } else { %>
+            <div style="display:flex;flex-direction:column;gap:0">
+              <% myTasks.forEach(t => { %>
+              <div style="padding:14px 20px;border-bottom:1px solid var(--border)">
+                <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px">
+                  <div>
+                    <div style="font-weight:600;font-size:.875rem;color:#fff"><%= t.title %></div>
+                    <div style="font-size:.78rem;color:var(--text3);margin-top:2px">Agent: <%= t.agent_name %> &nbsp;|&nbsp; $<%= t.amount_charged %></div>
+                    <div style="font-size:.78rem;color:var(--text3)"><%= new Date(t.created_at).toLocaleDateString() %></div>
+                  </div>
+                  <span class="pill pill-<%= t.status.toLowerCase() %>"><%= t.status %></span>
+                </div>
+                <% if (t.result_url) { %>
+                <div style="margin-top:8px">
+                  <a href="<%= t.result_url %>" target="_blank" class="btn btn-outline btn-sm">&#9654; View Video</a>
+                </div>
+                <% } %>
+                <% if (t.result_note) { %>
+                <div style="font-size:.8rem;color:var(--text2);margin-top:6px;font-style:italic"><%= t.result_note %></div>
+                <% } %>
+              </div>
+              <% }) %>
+            </div>
+            <% } %>
+          </div>
+        </div>
+      </div>
+      <% } %>
+    </div>
+  </div>
+</div>
+<script src="/js/main.js"></script>
+<script>
+function updateRate(rate) {
+  document.getElementById('rate-display').textContent = '$' + parseFloat(rate).toFixed(2)
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Social Media — AutoPips</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/main.css">
+</head>
+<body>
+<div class="app-layout">
+  <%- include('../partials/sidebar', { user, path, pendingWithdrawals: 0 }) %>
+  <div class="main-content">
+  <%- include('../partials/topbar', { user, balances: typeof balances !== 'undefined' ? balances : null, pageTitle: typeof pageTitle !== 'undefined' ? pageTitle : '' }) %>
+    <div class="page-header">
+      <div>
+        <h1 class="page-title">Social Media</h1>
+        <p class="page-subtitle">Set up and manage social accounts for your dropshipping brand</p>
+      </div>
+    </div>
+    <div class="page-body">
+      <%- include('../partials/flash', { flash }) %>
+      <% if (flash.success === 'requested') { %><div class="alert alert-success">Setup request submitted! Your agent will create the account and share access details with you.</div><% } %>
+
+      <!-- Best Practice Banner -->
+      <div class="info-banner" style="margin-bottom:28px;border-color:rgba(0,212,255,.3)">
+        <div class="info-banner-icon" style="font-size:1.5rem">&#128274;</div>
+        <div>
+          <strong style="color:#fff;font-size:.9375rem">Our Recommendation: Let Your Agent Create New Accounts</strong>
+          <p style="color:var(--text2);margin-top:6px;font-size:.875rem">For your first store, we strongly recommend having your agent create <strong style="color:#fff">brand new, dedicated social media accounts</strong> for your business. This protects your personal accounts, avoids algorithm flags from rapid business activity, and gives your brand a clean professional identity.</p>
+          <p style="color:var(--cyan);margin-top:8px;font-size:.8125rem">&#9888; Never share your personal social media passwords with any agent. Your agent will create fresh accounts and share the credentials only with you.</p>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px">
+        <!-- Request setup form -->
+        <div>
+          <div class="card">
+            <div class="card-header"><span class="card-title">Request Social Account Setup</span></div>
+            <div class="card-body">
+              <% if (myAgents.length === 0) { %>
+              <div class="alert alert-warn">You need to hire an agent first. <a href="/agents" style="color:var(--cyan)">Find an agent &#8594;</a></div>
+              <% } else { %>
+              <form method="POST" action="/social/request-setup">
+                <div class="form-group">
+                  <label class="form-label">Platform</label>
+                  <select class="form-select" name="platform" required>
+                    <option value="TikTok">TikTok</option>
+                    <option value="Instagram">Instagram</option>
+                    <option value="Facebook">Facebook Page</option>
+                    <option value="YouTube">YouTube Channel</option>
+                    <option value="Pinterest">Pinterest</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Brand Name</label>
+                  <input class="form-input" type="text" name="brand_name" placeholder="e.g. GlowSkin Beauty" required>
+                  <p class="form-hint">Your agent will create an account under this name.</p>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Business Niche</label>
+                  <input class="form-input" type="text" name="niche" placeholder="e.g. Skincare, Fitness, Home Decor" required>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Assign to Agent</label>
+                  <select class="form-select" name="assignment_id" required>
+                    <option value="">— Select agent —</option>
+                    <% myAgents.forEach(a => { %>
+                    <option value="<%= a.id %>"><%= a.agent_name %></option>
+                    <% }) %>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Additional Notes (optional)</label>
+                  <textarea class="form-textarea" name="notes" placeholder="Brand colours, tone, content style, target audience..."></textarea>
+                </div>
+                <div class="info-banner" style="margin-bottom:16px;padding:12px 14px">
+                  <div style="font-size:1rem">&#128100;</div>
+                  <p style="font-size:.78rem;color:var(--text2)">Your agent will create a new account and share the login credentials <strong style="color:#fff">only with you</strong> via the platform messaging system. This setup is included in your agent's management services at no extra cost.</p>
+                </div>
+                <button type="submit" class="btn btn-primary w-full">Request Account Setup</button>
+              </form>
+              <% } %>
+            </div>
+          </div>
+        </div>
+
+        <!-- Current accounts -->
+        <div>
+          <div class="card">
+            <div class="card-header"><span class="card-title">Your Social Accounts</span></div>
+            <% if (accounts.length === 0) { %>
+            <div class="empty-state">
+              <div class="icon">&#128247;</div>
+              <p>No social accounts set up yet.<br>Request a setup on the left to get started.</p>
+            </div>
+            <% } else { %>
+            <div style="display:flex;flex-direction:column;gap:0">
+              <% accounts.forEach(acc => { %>
+              <div style="padding:14px 20px;border-bottom:1px solid var(--border)">
+                <div style="display:flex;justify-content:space-between;align-items:center;gap:10px">
+                  <div>
+                    <div style="display:flex;align-items:center;gap:8px">
+                      <span style="font-size:1.1rem">
+                        <% if (acc.platform === 'TikTok') { %>&#127999;
+                        <% } else if (acc.platform === 'Instagram') { %>&#128247;
+                        <% } else if (acc.platform === 'Facebook') { %>&#128172;
+                        <% } else if (acc.platform === 'YouTube') { %>&#128249;
+                        <% } else { %>&#128279;<% } %>
+                      </span>
+                      <strong style="color:#fff;font-size:.9rem"><%= acc.platform %></strong>
+                      <span style="color:var(--text2);font-size:.875rem"><%= acc.brand_name %></span>
+                    </div>
+                    <% if (acc.username) { %>
+                    <div style="font-size:.8rem;color:var(--cyan);margin-top:2px">@<%= acc.username %></div>
+                    <% } %>
+                    <% if (acc.agent_name) { %>
+                    <div style="font-size:.78rem;color:var(--text3);margin-top:2px">Managed by <%= acc.agent_name %></div>
+                    <% } %>
+                  </div>
+                  <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">
+                    <span class="pill pill-<%= acc.setup_status.toLowerCase() %>"><%= acc.setup_status %></span>
+                    <form method="POST" action="/social/<%= acc.id %>/remove" onsubmit="return confirm('Remove this account?')">
+                      <button type="submit" class="btn btn-ghost btn-sm" style="font-size:.75rem;padding:4px 10px;color:var(--red)">Remove</button>
+                    </form>
+                  </div>
+                </div>
+              </div>
+              <% }) %>
+            </div>
+            <% } %>
+          </div>
+
+          <!-- Platform tips -->
+          <div class="card mt-6">
+            <div class="card-header"><span class="card-title">Platform Tips</span></div>
+            <div class="card-body" style="display:flex;flex-direction:column;gap:12px">
+              <div style="font-size:.875rem">
+                <strong style="color:#fff">TikTok</strong>
+                <p style="color:var(--text2);margin-top:3px">Best for product discovery. Short videos get massive organic reach. Great for beauty, gadgets, and lifestyle niches.</p>
+              </div>
+              <div style="font-size:.875rem">
+                <strong style="color:#fff">Instagram</strong>
+                <p style="color:var(--text2);margin-top:3px">Best for visual brands. Reels get strong reach. Stories and Shopping integrations available for product tagging.</p>
+              </div>
+              <div style="font-size:.875rem">
+                <strong style="color:#fff">Facebook</strong>
+                <p style="color:var(--text2);margin-top:3px">Best for paid advertising. Facebook Ads Manager is the most powerful targeting platform for dropshipping.</p>
+              </div>
+              <div style="font-size:.875rem">
+                <strong style="color:#fff">Pinterest</strong>
+                <p style="color:var(--text2);margin-top:3px">Best for home, fashion, and DIY niches. High purchase intent. Product pins drive long-term traffic.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="/js/main.js"></script>
+</body>
+</html>

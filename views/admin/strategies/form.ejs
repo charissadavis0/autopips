@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title><%= strategy ? 'Edit Strategy' : 'Add Strategy' %> — Admin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/main.css">
+</head>
+<body>
+<div class="app-layout">
+  <%- include('../../partials/sidebar', { user, path, pendingWithdrawals }) %>
+  <div class="main-content">
+  <%- include('../../partials/topbar', { user, balances: typeof balances !== 'undefined' ? balances : null, pageTitle: typeof pageTitle !== 'undefined' ? pageTitle : '' }) %>
+    <div class="page-header">
+      <div style="display:flex;align-items:center;gap:12px">
+        <a href="/admin/strategies" class="btn btn-ghost btn-sm">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+          Back
+        </a>
+        <h1 class="page-title" style="margin:0"><%= strategy ? 'Edit Strategy' : 'Add Strategy' %></h1>
+      </div>
+    </div>
+    <div class="page-body">
+      <%- include('../../partials/flash', { flash }) %>
+
+      <form method="POST" action="<%= strategy ? '/admin/strategies/' + strategy.id : '/admin/strategies' %>">
+        <div style="display:grid;grid-template-columns:2fr 1fr;gap:20px">
+          <div style="display:flex;flex-direction:column;gap:16px">
+
+            <div class="card">
+              <div class="card-header"><span class="card-title">Strategy Details</span></div>
+              <div class="card-body" style="display:flex;flex-direction:column;gap:14px">
+                <div class="form-group">
+                  <label class="form-label">Strategy Name *</label>
+                  <input type="text" name="name" class="form-input" value="<%= strategy ? strategy.name : '' %>" required placeholder="e.g. Beauty Skincare Starter Pack">
+                </div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+                  <div class="form-group">
+                    <label class="form-label">Business Niche *</label>
+                    <input type="text" name="niche" class="form-input" value="<%= strategy ? strategy.niche : '' %>" required placeholder="e.g. Beauty & Skincare">
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">Target Country</label>
+                    <input type="text" name="target_country" class="form-input" value="<%= strategy ? strategy.target_country : '' %>" placeholder="e.g. United States">
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Target Audience</label>
+                  <input type="text" name="target_audience" class="form-input" value="<%= strategy ? strategy.target_audience : '' %>" placeholder="e.g. Women 18–35 interested in skincare">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Strategy Description</label>
+                  <textarea name="description" class="form-input" rows="4" placeholder="Describe the strategy, target market, and expected outcomes..."><%= strategy ? strategy.description : '' %></textarea>
+                </div>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="card-header"><span class="card-title">Marketing & SEO Plan</span></div>
+              <div class="card-body" style="display:flex;flex-direction:column;gap:14px">
+                <div class="form-group">
+                  <label class="form-label">Marketing Strategy</label>
+                  <textarea name="marketing_strategy" class="form-input" rows="3" placeholder="Describe the marketing approach..."><%= strategy ? strategy.marketing_strategy : '' %></textarea>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">SEO Strategy</label>
+                  <textarea name="seo_strategy" class="form-input" rows="3" placeholder="Describe the SEO approach and target keywords..."><%= strategy ? strategy.seo_strategy : '' %></textarea>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Social Media Strategy</label>
+                  <textarea name="social_strategy" class="form-input" rows="3" placeholder="Content types, platforms, posting frequency..."><%= strategy ? strategy.social_strategy : '' %></textarea>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Setup Instructions</label>
+                  <textarea name="setup_instructions" class="form-input" rows="3" placeholder="Step-by-step setup guidance for the user..."><%= strategy ? strategy.setup_instructions : '' %></textarea>
+                </div>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="card-header"><span class="card-title">Associated Products</span></div>
+              <div class="card-body">
+                <% if (products.length === 0) { %>
+                <p style="color:var(--text3);font-size:.875rem">No published products available. <a href="/admin/products/new" class="auth-link">Add and publish products first</a>.</p>
+                <% } else { %>
+                <div style="display:flex;flex-direction:column;gap:8px;max-height:300px;overflow-y:auto">
+                  <% const selectedIds = strategyProducts.map(sp => sp.product_id) %>
+                  <% products.forEach(p => { %>
+                  <label style="display:flex;align-items:center;gap:10px;padding:8px 10px;border:1px solid var(--border);border-radius:8px;cursor:pointer;font-size:.875rem;color:var(--text)">
+                    <input type="checkbox" name="product_ids" value="<%= p.id %>" <%= selectedIds.includes(p.id)?'checked':'' %> style="accent-color:var(--cyan);width:16px;height:16px;flex-shrink:0">
+                    <span style="flex:1"><%= p.name %></span>
+                    <span style="font-size:.75rem;color:var(--text3)"><%= p.category %></span>
+                  </label>
+                  <% }) %>
+                </div>
+                <% } %>
+              </div>
+            </div>
+          </div>
+
+          <div style="display:flex;flex-direction:column;gap:16px">
+            <div class="card">
+              <div class="card-header"><span class="card-title">Configuration</span></div>
+              <div class="card-body" style="display:flex;flex-direction:column;gap:14px">
+                <div class="form-group">
+                  <label class="form-label">Status</label>
+                  <select name="status" class="form-input">
+                    <option value="DRAFT" <%= (!strategy||strategy.status==='DRAFT')?'selected':'' %>>Draft</option>
+                    <option value="ACTIVE" <%= (strategy&&strategy.status==='ACTIVE')?'selected':'' %>>Published</option>
+                    <option value="ARCHIVED" <%= (strategy&&strategy.status==='ARCHIVED')?'selected':'' %>>Archived</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Difficulty</label>
+                  <select name="difficulty" class="form-input">
+                    <option value="BEGINNER" <%= (!strategy||strategy.difficulty==='BEGINNER')?'selected':'' %>>Beginner</option>
+                    <option value="INTERMEDIATE" <%= (strategy&&strategy.difficulty==='INTERMEDIATE')?'selected':'' %>>Intermediate</option>
+                    <option value="ADVANCED" <%= (strategy&&strategy.difficulty==='ADVANCED')?'selected':'' %>>Advanced</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Estimated Startup Budget</label>
+                  <input type="text" name="estimated_budget" class="form-input" value="<%= strategy ? strategy.estimated_budget : '' %>" placeholder="e.g. 300–500">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Suggested Ad Budget</label>
+                  <input type="text" name="suggested_ad_budget" class="form-input" value="<%= strategy ? strategy.suggested_ad_budget : '' %>" placeholder="e.g. 50–100/month">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Tags (JSON array)</label>
+                  <input type="text" name="tags" class="form-input" value='<%= strategy ? strategy.tags : "[]" %>' placeholder='["skincare","beauty"]'>
+                </div>
+                <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-size:.875rem;color:var(--text)">
+                  <input type="checkbox" name="is_featured" value="1" <%= (strategy&&strategy.is_featured)?'checked':'' %> style="accent-color:var(--cyan);width:16px;height:16px">
+                  Featured strategy
+                </label>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="card-body" style="display:flex;flex-direction:column;gap:10px">
+                <button type="submit" class="btn btn-primary" style="width:100%">
+                  <%= strategy ? 'Save Changes' : 'Create Strategy' %>
+                </button>
+                <a href="/admin/strategies" class="btn btn-outline" style="width:100%;text-align:center">Cancel</a>
+              </div>
+            </div>
+
+            <% if (strategy) { %>
+            <div class="card" style="border-color:rgba(255,74,74,.2)">
+              <div class="card-header"><span class="card-title" style="color:var(--red)">Danger Zone</span></div>
+              <div class="card-body">
+                <form method="POST" action="/admin/strategies/<%= strategy.id %>/delete" onsubmit="return confirm('Delete this strategy permanently?')">
+                  <button type="submit" class="btn btn-sm" style="background:rgba(255,74,74,.1);color:var(--red);border:1px solid rgba(255,74,74,.3);width:100%">Delete Strategy</button>
+                </form>
+              </div>
+            </div>
+            <% } %>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+<script src="/js/main.js"></script>
+</body>
+</html>

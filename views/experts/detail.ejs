@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title><%= expert.name %> — AutoPips</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/main.css">
+</head>
+<body>
+<div class="app-layout">
+  <%- include('../partials/sidebar', { user, path, pendingWithdrawals }) %>
+  <div class="main-content">
+  <%- include('../partials/topbar', { user, balances: typeof balances !== 'undefined' ? balances : null, pageTitle: typeof pageTitle !== 'undefined' ? pageTitle : '' }) %>
+    <div class="page-header" style="padding-bottom:0;border-bottom:none">
+      <a href="/experts" class="btn btn-ghost btn-sm" style="margin-bottom:16px">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+        Back to Experts
+      </a>
+    </div>
+    <div class="page-body" style="padding-top:0">
+      <%
+        let areas = []; try { areas = JSON.parse(expert.areas_of_expertise || '[]') } catch(_) {}
+        let markets = []; try { markets = JSON.parse(expert.target_markets || '[]') } catch(_) {}
+        let gallery = []; try { gallery = JSON.parse(expert.gallery || '[]') } catch(_) {}
+      %>
+
+      <!-- Hero -->
+      <div class="card" style="margin-bottom:20px;overflow:hidden">
+        <% if (expert.cover_image) { %>
+        <div style="height:180px;background-image:url(<%= expert.cover_image %>);background-size:cover;background-position:center"></div>
+        <% } else { %>
+        <div style="height:120px;background:linear-gradient(135deg,rgba(59,110,246,.15),rgba(59,110,246,.03))"></div>
+        <% } %>
+        <div class="card-body" style="padding-top:0;position:relative">
+          <div style="display:flex;align-items:flex-end;gap:16px;margin-top:-36px;margin-bottom:16px">
+            <% if (expert.profile_image) { %>
+            <img src="<%= expert.profile_image %>" alt="<%= expert.name %>" style="width:72px;height:72px;border-radius:4px;object-fit:cover;border:2px solid var(--bg);flex-shrink:0">
+            <% } else { %>
+            <div style="width:72px;height:72px;border-radius:4px;background:var(--brand);display:flex;align-items:center;justify-content:center;font-size:2rem;font-weight:800;color:#fff;flex-shrink:0;border:2px solid var(--bg)"><%= expert.name.charAt(0) %></div>
+            <% } %>
+            <div style="padding-bottom:4px">
+              <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+                <h1 style="font-size:1.3rem;font-weight:700;color:#fff;font-family:'Space Grotesk',sans-serif"><%= expert.name %></h1>
+                <% if (expert.is_verified) { %><span class="pill pill-active" style="font-size:.7rem">✓ Verified</span><% } %>
+              </div>
+              <% if (expert.country) { %><p style="font-size:.8rem;color:var(--text3);margin-top:3px">📍 <%= expert.country %></p><% } %>
+            </div>
+          </div>
+          <% if (expert.bio) { %><p style="font-size:.9rem;color:var(--text2);line-height:1.7;margin-bottom:16px"><%= expert.bio %></p><% } %>
+          <div style="display:flex;flex-wrap:wrap;gap:6px">
+            <% areas.forEach(a => { %><span class="stag"><%= a %></span><% }) %>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:2fr 1fr;gap:20px">
+        <div style="display:flex;flex-direction:column;gap:16px">
+
+          <% if (expert.case_studies) { %>
+          <div class="card">
+            <div class="card-header"><span class="card-title">Case Studies & Results</span></div>
+            <div class="card-body">
+              <p style="font-size:.875rem;color:var(--text2);line-height:1.75;white-space:pre-wrap"><%= expert.case_studies %></p>
+            </div>
+          </div>
+          <% } %>
+
+          <% if (gallery.length > 0) { %>
+          <div class="card">
+            <div class="card-header"><span class="card-title">Gallery</span></div>
+            <div class="card-body">
+              <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px">
+                <% gallery.forEach(img => { %>
+                <img src="<%= img %>" alt="Gallery" style="width:100%;height:120px;object-fit:cover;border-radius:4px;border:1px solid var(--border)">
+                <% }) %>
+              </div>
+            </div>
+          </div>
+          <% } %>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:16px">
+          <div class="card">
+            <div class="card-header"><span class="card-title">Expert Details</span></div>
+            <div class="card-body">
+              <div class="info-row"><span class="info-key">Experience</span><span class="info-val"><%= expert.years_experience || 0 %> years</span></div>
+              <% if (markets.length > 0) { %>
+              <div class="info-row" style="flex-direction:column;align-items:flex-start;gap:6px">
+                <span class="info-key">Target Markets</span>
+                <div style="display:flex;flex-wrap:wrap;gap:6px">
+                  <% markets.forEach(m => { %><span class="stag"><%= m %></span><% }) %>
+                </div>
+              </div>
+              <% } %>
+              <% if (expert.verification_note) { %>
+              <div class="info-row" style="flex-direction:column;align-items:flex-start;gap:4px">
+                <span class="info-key">Verification Note</span>
+                <span class="info-val" style="font-size:.8rem;font-weight:400;color:var(--text2)"><%= expert.verification_note %></span>
+              </div>
+              <% } %>
+            </div>
+          </div>
+
+          <div class="card" style="border-color:rgba(59,110,246,.2)">
+            <div class="card-body" style="text-align:center">
+              <p style="font-size:.8rem;color:var(--text3);margin-bottom:12px">Want personalised guidance from this expert?</p>
+              <a href="/agents" class="btn btn-primary" style="width:100%">Browse AI Agents</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="/js/main.js"></script>
+</body>
+</html>

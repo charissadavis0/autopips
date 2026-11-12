@@ -1,0 +1,19 @@
+<nav class="navbar">
+  <a href="/" class="navbar-brand">AutoPips</a>
+  <div class="navbar-links">
+    <% if (user) { %>
+      <a href="/dashboard" class="<%= path.startsWith('/dashboard') ? 'active' : '' %>">Dashboard</a>
+      <a href="/wallet" class="<%= path.startsWith('/wallet') ? 'active' : '' %>">Wallet</a>
+      <% if (['SUPER_ADMIN','COMPLIANCE','SUPPORT','FINANCE'].includes(user.role)) { %>
+        <a href="/admin" class="<%= path.startsWith('/admin') ? 'active' : '' %>">Admin</a>
+      <% } %>
+      <a href="/auth/logout" class="btn btn-outline btn-sm">Sign Out</a>
+    <% } else { %>
+      <a href="/#how-it-works">How it works</a>
+      <a href="/#pricing">Pricing</a>
+      <a href="/#faq">FAQ</a>
+      <a href="/auth/login" class="btn btn-outline btn-sm">Sign In</a>
+      <a href="/auth/signup" class="btn btn-gold btn-sm">Get Started</a>
+    <% } %>
+  </div>
+</nav>

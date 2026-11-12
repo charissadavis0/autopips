@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Expert Advisors — AutoPips</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/main.css">
+</head>
+<body>
+<div class="app-layout">
+  <%- include('../partials/sidebar', { user, path, pendingWithdrawals }) %>
+  <div class="main-content">
+  <%- include('../partials/topbar', { user, balances: typeof balances !== 'undefined' ? balances : null, pageTitle: typeof pageTitle !== 'undefined' ? pageTitle : '' }) %>
+    <div class="page-header">
+      <h1 class="page-title">Expert Advisors</h1>
+      <p class="page-subtitle">Verified dropshipping experts who can guide your strategy and growth</p>
+    </div>
+    <div class="page-body">
+
+      <form method="GET" style="margin-bottom:24px;display:flex;gap:10px">
+        <input type="text" name="q" value="<%= filters.q %>" placeholder="Search experts..." class="form-input" style="max-width:280px">
+        <button type="submit" class="btn btn-outline btn-sm">Search</button>
+        <% if (filters.q) { %><a href="/experts" class="btn btn-ghost btn-sm">Clear</a><% } %>
+      </form>
+
+      <% if (experts.length === 0) { %>
+      <div class="empty-state">
+        <div class="icon">👤</div>
+        <p>No expert advisors available yet. Check back soon.</p>
+      </div>
+      <% } else { %>
+      <div class="expert-grid">
+        <% experts.forEach(expert => {
+          let areas = []; try { areas = JSON.parse(expert.areas_of_expertise || '[]') } catch(_) {}
+          let gallery = []; try { gallery = JSON.parse(expert.gallery || '[]') } catch(_) {}
+        %>
+        <div class="expert-card">
+          <div class="expert-cover" style="<%= expert.cover_image ? 'background-image:url(' + expert.cover_image + ');background-size:cover;background-position:center' : '' %>"></div>
+          <div class="expert-card-body">
+            <div class="expert-avatar-wrap">
+              <% if (expert.profile_image) { %>
+              <img src="<%= expert.profile_image %>" alt="<%= expert.name %>" class="expert-avatar-img">
+              <% } else { %>
+              <div class="expert-avatar-placeholder"><%= expert.name.charAt(0) %></div>
+              <% } %>
+              <% if (expert.is_verified) { %>
+              <span class="expert-verified-badge" title="Verified Expert">✓</span>
+              <% } %>
+            </div>
+            <h3 class="expert-name"><%= expert.name %></h3>
+            <% if (expert.country) { %><p class="expert-country">📍 <%= expert.country %></p><% } %>
+            <p class="expert-bio"><%= (expert.bio || '').substring(0, 120) %><%= (expert.bio||'').length > 120 ? '…' : '' %></p>
+            <div class="expert-areas">
+              <% areas.slice(0,3).forEach(a => { %><span class="stag"><%= a %></span><% }) %>
+              <% if (areas.length > 3) { %><span class="stag">+<%= areas.length - 3 %> more</span><% } %>
+            </div>
+            <div class="expert-footer">
+              <div class="expert-exp"><strong><%= expert.years_experience || 0 %>yr</strong> experience</div>
+              <a href="/experts/<%= expert.id %>" class="btn btn-primary btn-sm">View Profile</a>
+            </div>
+          </div>
+        </div>
+        <% }) %>
+      </div>
+      <% } %>
+    </div>
+  </div>
+</div>
+<style>
+.expert-grid { display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:20px; }
+.expert-card { background:linear-gradient(160deg,rgba(20,28,54,.85),rgba(10,15,30,.9));border:1px solid var(--border);border-radius:4px;overflow:hidden; }
+.expert-cover { height:90px;background:var(--bg3); }
+.expert-card-body { padding:0 20px 20px;position:relative; }
+.expert-avatar-wrap { position:relative;display:inline-block;margin-top:-32px;margin-bottom:10px; }
+.expert-avatar-img { width:64px;height:64px;border-radius:4px;object-fit:cover;border:2px solid var(--bg); }
+.expert-avatar-placeholder { width:64px;height:64px;border-radius:4px;background:var(--brand);display:flex;align-items:center;justify-content:center;font-size:1.5rem;font-weight:800;color:#fff;border:2px solid var(--bg); }
+.expert-verified-badge { position:absolute;bottom:0;right:0;width:18px;height:18px;background:var(--green);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.6rem;font-weight:700;color:#fff;border:2px solid var(--bg); }
+.expert-name { font-size:1rem;font-weight:700;color:#fff;font-family:'Space Grotesk',sans-serif;margin-bottom:2px; }
+.expert-country { font-size:.78rem;color:var(--text3);margin-bottom:8px; }
+.expert-bio { font-size:.8125rem;color:var(--text2);line-height:1.6;margin-bottom:12px; }
+.expert-areas { display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px; }
+.expert-footer { display:flex;align-items:center;justify-content:space-between; }
+.expert-exp { font-size:.8rem;color:var(--text3); }
+.expert-exp strong { color:var(--text-hi); }
+</style>
+<script src="/js/main.js"></script>
+</body>
+</html>

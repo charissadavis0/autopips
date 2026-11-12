@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>My Products — AutoPips</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/main.css">
+</head>
+<body>
+<div class="app-layout">
+  <%- include('../partials/sidebar', { user, path, pendingWithdrawals: 0 }) %>
+  <div class="main-content">
+  <%- include('../partials/topbar', { user, balances: typeof balances !== 'undefined' ? balances : null, pageTitle: typeof pageTitle !== 'undefined' ? pageTitle : '' }) %>
+    <div class="page-header">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;width:100%">
+        <div>
+          <h1 class="page-title">My Products</h1>
+          <p class="page-subtitle"><%= products.length %> product<%= products.length !== 1 ? 's' : '' %> in your stores</p>
+        </div>
+        <a href="/autopips" class="btn btn-primary btn-sm">+ Discover Products</a>
+      </div>
+    </div>
+    <div class="page-body">
+      <%- include('../partials/flash', { flash }) %>
+      <% if (flash.success === 'removed') { %><div class="alert alert-success">Product removed from your store.</div><% } %>
+
+      <% if (products.length === 0) { %>
+      <div class="card" style="text-align:center;padding:48px">
+        <div style="font-size:2.5rem;margin-bottom:16px">&#128230;</div>
+        <h3 style="color:#fff;margin-bottom:8px">No products yet</h3>
+        <p style="color:var(--text2);margin-bottom:24px">Browse the Autopips catalog to discover high-margin products.</p>
+        <a href="/autopips" class="btn btn-primary">Browse Catalog</a>
+      </div>
+      <% } else { %>
+      <div class="card">
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Product</th><th>Category</th><th>Your Price</th><th>Cost</th><th>Margin</th><th>Supplier</th><th>Stock</th><th></th></tr></thead>
+            <tbody>
+              <% products.forEach(p => { %>
+              <tr>
+                <td style="font-weight:600;color:#fff"><%= p.custom_name || p.product_name %></td>
+                <td><%= p.category %></td>
+                <td class="tabular-nums" style="color:var(--cyan)">$<%= parseFloat(p.custom_price || p.orig_price).toFixed(2) %></td>
+                <td class="tabular-nums text-muted">$<%= parseFloat(p.cost).toFixed(2) %></td>
+                <td style="color:var(--green)"><%= p.profit_margin %>%</td>
+                <td class="text-muted"><%= p.supplier_name || '—' %></td>
+                <td><span class="pill pill-<%= p.stock_status.toLowerCase().replace('_','-') %>"><%= p.stock_status %></span></td>
+                <td>
+                  <form method="POST" action="/business/products/<%= p.id %>/remove" onsubmit="return confirm('Remove this product?')">
+                    <button type="submit" class="btn btn-ghost btn-sm" style="color:var(--red)">Remove</button>
+                  </form>
+                </td>
+              </tr>
+              <% }) %>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <% } %>
+    </div>
+  </div>
+</div>
+<script src="/js/main.js"></script>
+</body>
+</html>

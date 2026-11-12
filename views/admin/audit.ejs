@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Audit Log — Admin — AutoPips</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/main.css">
+</head>
+<body>
+<div class="app-layout">
+  <%- include('../partials/sidebar', { user, path, pendingWithdrawals }) %>
+  <div class="main-content">
+  <%- include('../partials/topbar', { user, balances: typeof balances !== 'undefined' ? balances : null, pageTitle: typeof pageTitle !== 'undefined' ? pageTitle : '' }) %>
+    <div class="page-header">
+      <h1 class="page-title">Audit Log</h1>
+      <p class="page-subtitle"><%= total %> entries — immutable record of all admin actions</p>
+    </div>
+    <div class="page-body">
+      <form method="GET" class="flex gap-3 mb-6 wrap">
+        <input class="form-input" style="max-width:240px" name="action" value="<%= query %>" placeholder="Filter by action…">
+        <% if (userId) { %><input type="hidden" name="userId" value="<%= userId %>"><% } %>
+        <button class="btn btn-outline">Filter</button>
+        <% if (query || userId) { %><a href="/admin/audit" class="btn btn-ghost">Clear</a><% } %>
+      </form>
+
+      <div class="card">
+        <% if (entries.length === 0) { %>
+        <div class="empty-state"><div class="icon">&#128274;</div><p>No audit entries found.</p></div>
+        <% } else { %>
+        <div>
+          <% entries.forEach(a => { %>
+          <div style="padding:16px 20px;border-bottom:1px solid var(--border)">
+            <div class="flex items-center gap-3 wrap" style="margin-bottom:4px">
+              <span class="pill pill-review"><%= a.action.replace(/_/g,' ') %></span>
+              <span class="text-muted text-xs"><%= a.target_type %></span>
+              <% if (a.target_id) { %>
+              <span class="font-mono text-xs text-muted"><%= a.target_id.slice(0,16) %>…</span>
+              <% } %>
+            </div>
+            <div class="flex gap-4 text-sm text-muted mt-1">
+              <span>By <strong style="color:var(--text-secondary)"><%= a.admin_email %></strong></span>
+              <% if (a.ip_address) { %><span>IP: <%= a.ip_address %></span><% } %>
+              <span><%= new Date(a.created_at).toLocaleString() %></span>
+            </div>
+          </div>
+          <% }) %>
+        </div>
+        <% } %>
+        <% if (totalPages > 1) { %>
+        <div style="padding:14px 20px;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between">
+          <span class="text-muted text-sm">Page <%= page %> of <%= totalPages %></span>
+          <div class="flex gap-2">
+            <% if (page > 1) { %><a href="?action=<%= query %>&page=<%= page-1 %>" class="btn btn-outline btn-sm">&#8592;</a><% } %>
+            <% if (page < totalPages) { %><a href="?action=<%= query %>&page=<%= page+1 %>" class="btn btn-outline btn-sm">&#8594;</a><% } %>
+          </div>
+        </div>
+        <% } %>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="/js/main.js"></script>
+</body>
+</html>
