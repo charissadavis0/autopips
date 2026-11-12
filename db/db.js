@@ -11,6 +11,8 @@
  */
 
 const { Pool } = require('pg')
+const fs = require('fs')
+const path = require('path')
 
 // Parse DATABASE_URL with WHATWG URL to bypass pg-connection-string issues
 function pgParamsFromUrl(raw) {
@@ -38,6 +40,36 @@ const pool = new Pool({
 })
 
 pool.on('error', (err) => console.error('[pg] Unexpected pool error:', err.message))
+
+// Auto-migrate: apply schema on first boot (all statements are CREATE TABLE IF NOT EXISTS)
+;(async () => {
+  try {
+    const schema = fs.readFileSync(path.join(__dirname, 'schema.pg.sql'), 'utf8')
+    await pool.query(schema)
+    console.log('[pg] Schema applied')
+
+    // Seed admin user so it always has SUPER_ADMIN role
+    const bcrypt = require('bcryptjs')
+    const { v4: uuidv4 } = require('uuid')
+    const adminHash = bcrypt.hashSync('Admin@12345', 12)
+    const userHash  = bcrypt.hashSync('Test@12345', 12)
+    await pool.query(
+      `INSERT INTO users (id,email,password_hash,name,role,tier,email_verified,kyc_level,suspended,frozen)
+       VALUES ($1,$2,$3,$4,'SUPER_ADMIN','PLATINUM',1,'NONE',0,0)
+       ON CONFLICT (email) DO UPDATE SET role='SUPER_ADMIN',tier='PLATINUM',email_verified=1`,
+      [uuidv4(), 'admin@autopips.com', adminHash, 'Admin']
+    )
+    await pool.query(
+      `INSERT INTO users (id,email,password_hash,name,role,tier,email_verified,kyc_level,suspended,frozen)
+       VALUES ($1,$2,$3,$4,'USER','STANDARD',1,'NONE',0,0)
+       ON CONFLICT (email) DO NOTHING`,
+      [uuidv4(), 'testuser@autopips.com', userHash, 'Test User']
+    )
+    console.log('[pg] Seed users ensured')
+  } catch (e) {
+    console.error('[pg] Schema migration failed:', e.message)
+  }
+})()
 
 function convertSql(sql) {
   let i = 0

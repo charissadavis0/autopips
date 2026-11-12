@@ -10,7 +10,7 @@ async function seed() {
   await db.prepare(`
     INSERT INTO users (id, email, password_hash, name, role, tier, email_verified, kyc_level, suspended, frozen)
     VALUES (?, ?, ?, ?, 'SUPER_ADMIN', 'PLATINUM', 1, 0, 0, 0)
-    ON CONFLICT (email) DO NOTHING
+    ON CONFLICT (email) DO UPDATE SET role='SUPER_ADMIN', tier='PLATINUM', email_verified=1
   `).run(uuidv4(), 'admin@autopips.com', adminHash, 'Admin')
 
   await db.prepare(`
