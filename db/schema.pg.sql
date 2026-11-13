@@ -259,6 +259,7 @@ CREATE TABLE IF NOT EXISTS agents (
   bio TEXT,
   avatar_initials TEXT NOT NULL DEFAULT 'AG',
   profile_image TEXT,
+  cover_image TEXT,
   expertise TEXT NOT NULL DEFAULT '[]',
   niches TEXT NOT NULL DEFAULT '[]',
   services TEXT NOT NULL DEFAULT '[]',
@@ -353,3 +354,12 @@ CREATE INDEX IF NOT EXISTS idx_agent_assignments_user ON agent_assignments(user_
 CREATE INDEX IF NOT EXISTS idx_agent_tasks_user   ON agent_tasks(user_id);
 CREATE INDEX IF NOT EXISTS idx_social_accounts_user ON social_accounts(user_id);
 CREATE INDEX IF NOT EXISTS idx_user_businesses_user ON user_businesses(user_id);
+
+-- ── Additive migrations (safe to re-run) ─────────────────────────────────────
+ALTER TABLE agents ADD COLUMN IF NOT EXISTS cover_image TEXT;
+ALTER TABLE payment_methods ADD COLUMN IF NOT EXISTS qr_code TEXT;
+ALTER TABLE payment_methods ADD COLUMN IF NOT EXISTS instructions TEXT;
+ALTER TABLE payment_methods ADD COLUMN IF NOT EXISTS min_deposit TEXT NOT NULL DEFAULT '10';
+ALTER TABLE payment_methods ADD COLUMN IF NOT EXISTS network_warning TEXT;
+ALTER TABLE experts ADD COLUMN IF NOT EXISTS niche TEXT;
+ALTER TABLE experts ADD COLUMN IF NOT EXISTS consultation_fee TEXT;
