@@ -46,7 +46,7 @@ router.post('/', withUpload(upload.array('product_images', 10), '/admin/products
     stock_status, opportunity_score, is_trending, is_featured, status,
     image_urls, variations, tags } = req.body
 
-  if (!name || !category) return res.redirect('/admin/products/new?err=Name+and+category+required')
+  if (!name || !category) return res.redirect(`${ADMIN}/products/new?err=Name+and+category+required`)
 
   const id = uuidv4()
   const fbUrls = await persistUploads(req, 'products')
@@ -70,24 +70,24 @@ router.post('/', withUpload(upload.array('product_images', 10), '/admin/products
       is_trending ? 1 : 0, is_featured ? 1 : 0,
       status||'DRAFT', images, variations||'[]', tags||'[]',
       req.session.userId)
-  res.redirect('/admin/products?msg=Product+created')
+  res.redirect(`${ADMIN}/products?msg=Product+created`)
 })
 
 router.get('/:id/edit', async (req, res) => {
   const product = await db.prepare('SELECT * FROM products WHERE id=?').get(req.params.id)
-  if (!product) return res.redirect('/admin/products?err=Not+found')
+  if (!product) return res.redirect(`${ADMIN}/products?err=Not+found`)
   const user = await db.prepare('SELECT * FROM users WHERE id=?').get(req.session.userId)
   res.render('admin/products/form', { user, path: '/admin/products', flash: {}, product, pendingWithdrawals: await getPW() })
 })
 
 router.post('/:id', (req, res, next) => withUpload(upload.array('product_images', 10), `/admin/products/${req.params.id}/edit`)(req, res, next), async (req, res) => {
   const existing = await db.prepare('SELECT * FROM products WHERE id=?').get(req.params.id)
-  if (!existing) return res.redirect('/admin/products')
+  if (!existing) return res.redirect(`${ADMIN}/products`)
   const { name, short_desc, description, category, cost, suggested_price, profit_margin,
     supplier_name, supplier_country, shipping_estimate, shipping_days_min, shipping_days_max,
     stock_status, opportunity_score, is_trending, is_featured, status,
     image_urls, remove_images, variations, tags } = req.body
-  if (!name) return res.redirect(`/admin/products/${req.params.id}/edit?err=Name+required`)
+  if (!name) return res.redirect(`${ADMIN}/products/${req.params.id}/edit?err=Name+required`)
 
   let imgs = []
   try { imgs = JSON.parse(existing.images || '[]') } catch (_) {}
@@ -114,7 +114,7 @@ router.post('/:id', (req, res, next) => withUpload(upload.array('product_images'
       is_trending ? 1 : 0, is_featured ? 1 : 0, status||'DRAFT',
       JSON.stringify(imgs), variations||'[]', tags||'[]',
       req.params.id)
-  res.redirect('/admin/products?msg=Product+updated')
+  res.redirect(`${ADMIN}/products?msg=Product+updated`)
 })
 
 router.post('/:id/delete', async (req, res) => {
@@ -124,15 +124,15 @@ router.post('/:id/delete', async (req, res) => {
     for (const img of imgs) await deleteUpload(img)
     await db.prepare('DELETE FROM products WHERE id=?').run(req.params.id)
   }
-  res.redirect('/admin/products?msg=Product+deleted')
+  res.redirect(`${ADMIN}/products?msg=Product+deleted`)
 })
 
 router.post('/:id/status', async (req, res) => {
   const { status } = req.body
   const allowed = ['DRAFT','PUBLISHED','ARCHIVED']
-  if (!allowed.includes(status)) return res.redirect('/admin/products?err=Invalid+status')
+  if (!allowed.includes(status)) return res.redirect(`${ADMIN}/products?err=Invalid+status`)
   await db.prepare("UPDATE products SET status=?, updated_at=NOW() WHERE id=?").run(status, req.params.id)
-  res.redirect('/admin/products?msg=Status+updated')
+  res.redirect(`${ADMIN}/products?msg=Status+updated`)
 })
 
 module.exports = router

@@ -5,6 +5,7 @@ const db = require('../db/database')
 const { getBalances, refundWithdrawal, manualAdjustment } = require('../lib/ledger')
 const requireAdmin = require('../middleware/requireAdmin')
 
+const ADMIN = process.env.ADMIN_PATH || '/admin'
 const router = express.Router()
 router.use(requireAdmin())
 
@@ -59,40 +60,40 @@ router.get('/withdrawals', async (req, res) => {
 
 router.post('/withdrawals/:id/approve', async (req, res) => {
   const w = await db.prepare('SELECT * FROM withdrawals WHERE id = ?').get(req.params.id)
-  if (!w || !['SUBMITTED', 'UNDER_REVIEW'].includes(w.status)) return res.redirect('/admin/withdrawals')
+  if (!w || !['SUBMITTED', 'UNDER_REVIEW'].includes(w.status)) return res.redirect(`${ADMIN}/withdrawals`)
   await db.prepare("UPDATE withdrawals SET status = 'APPROVED', updated_at = NOW() WHERE id = ?").run(w.id)
   await auditLog(req.session.userId, 'APPROVE_WITHDRAWAL', 'WITHDRAWAL', w.id, { status: w.status }, { status: 'APPROVED' }, req.ip)
   await db.prepare("INSERT INTO notifications (id, user_id, title, message, type) VALUES (?, ?, ?, ?, ?)").run(uuidv4(), w.user_id, 'Withdrawal approved', `Your withdrawal of $${parseFloat(w.amount).toFixed(2)} has been approved.`, 'SUCCESS')
-  res.redirect('/admin/withdrawals?status=APPROVED')
+  res.redirect(`${ADMIN}/withdrawals?status=APPROVED`)
 })
 
 router.post('/withdrawals/:id/hold', async (req, res) => {
   const w = await db.prepare('SELECT * FROM withdrawals WHERE id = ?').get(req.params.id)
-  if (!w || ['APPROVED','COMPLETED','REJECTED'].includes(w.status)) return res.redirect('/admin/withdrawals')
+  if (!w || ['APPROVED','COMPLETED','REJECTED'].includes(w.status)) return res.redirect(`${ADMIN}/withdrawals`)
   const note = req.body.admin_note || ''
   await db.prepare("UPDATE withdrawals SET status = 'UNDER_REVIEW', admin_note = ?, updated_at = NOW() WHERE id = ?").run(note, w.id)
   await auditLog(req.session.userId, 'HOLD_WITHDRAWAL', 'WITHDRAWAL', w.id, { status: w.status }, { status: 'UNDER_REVIEW', note }, req.ip)
   await db.prepare("INSERT INTO notifications (id, user_id, title, message, type) VALUES (?, ?, ?, ?, ?)").run(uuidv4(), w.user_id, 'Withdrawal Under Review', `Your withdrawal of $${parseFloat(w.amount).toFixed(2)} is being reviewed.`, 'INFO')
-  res.redirect('/admin/withdrawals?status=UNDER_REVIEW')
+  res.redirect(`${ADMIN}/withdrawals?status=UNDER_REVIEW`)
 })
 
 router.post('/withdrawals/:id/reject', async (req, res) => {
   const w = await db.prepare('SELECT * FROM withdrawals WHERE id = ?').get(req.params.id)
-  if (!w || !['SUBMITTED', 'UNDER_REVIEW'].includes(w.status)) return res.redirect('/admin/withdrawals')
+  if (!w || !['SUBMITTED', 'UNDER_REVIEW'].includes(w.status)) return res.redirect(`${ADMIN}/withdrawals`)
   const reason = req.body.reason || 'Rejected by admin'
   await db.prepare("UPDATE withdrawals SET status = 'REJECTED', admin_note = ?, updated_at = NOW() WHERE id = ?").run(reason, w.id)
   await refundWithdrawal({ userId: w.user_id, amount: w.amount, withdrawalId: w.id, idempotencyKey: w.idempotency_key })
   await auditLog(req.session.userId, 'REJECT_WITHDRAWAL', 'WITHDRAWAL', w.id, { status: w.status }, { status: 'REJECTED', reason }, req.ip)
   await db.prepare("INSERT INTO notifications (id, user_id, title, message, type) VALUES (?, ?, ?, ?, ?)").run(uuidv4(), w.user_id, 'Withdrawal rejected', `Your withdrawal was rejected. Funds have been returned to your available balance.`, 'WARNING')
-  res.redirect('/admin/withdrawals?status=REJECTED')
+  res.redirect(`${ADMIN}/withdrawals?status=REJECTED`)
 })
 
 router.post('/withdrawals/:id/complete', async (req, res) => {
   const w = await db.prepare('SELECT * FROM withdrawals WHERE id = ?').get(req.params.id)
-  if (!w || w.status !== 'APPROVED') return res.redirect('/admin/withdrawals')
+  if (!w || w.status !== 'APPROVED') return res.redirect(`${ADMIN}/withdrawals`)
   await db.prepare("UPDATE withdrawals SET status = 'COMPLETED', tx_hash = ?, updated_at = NOW() WHERE id = ?").run(req.body.tx_hash || null, w.id)
   await auditLog(req.session.userId, 'COMPLETE_WITHDRAWAL', 'WITHDRAWAL', w.id, { status: 'APPROVED' }, { status: 'COMPLETED' }, req.ip)
-  res.redirect('/admin/withdrawals?status=COMPLETED')
+  res.redirect(`${ADMIN}/withdrawals?status=COMPLETED`)
 })
 
 // Users list
@@ -116,7 +117,7 @@ router.get('/users', async (req, res) => {
 // User detail
 router.get('/users/:id', async (req, res) => {
   const targetUser = await db.prepare('SELECT * FROM users WHERE id = ?').get(req.params.id)
-  if (!targetUser) return res.redirect('/admin/users')
+  if (!targetUser) return res.redirect(`${ADMIN}/users`)
   const b = await getBalances(targetUser.id)
   const withdrawals = await db.prepare('SELECT * FROM withdrawals WHERE user_id = ? ORDER BY created_at DESC LIMIT 15').all(targetUser.id)
   const deposits = await db.prepare('SELECT * FROM deposits WHERE user_id = ? ORDER BY created_at DESC LIMIT 15').all(targetUser.id)
@@ -136,7 +137,7 @@ router.get('/users/:id', async (req, res) => {
 router.post('/users/:id/action', async (req, res) => {
   const { action, tier } = req.body
   const targetUser = await db.prepare('SELECT * FROM users WHERE id = ?').get(req.params.id)
-  if (!targetUser) return res.redirect('/admin/users')
+  if (!targetUser) return res.redirect(`${ADMIN}/users`)
   const before = { suspended: targetUser.suspended, frozen: targetUser.frozen, tier: targetUser.tier }
 
   if (action === 'SUSPEND')    await db.prepare('UPDATE users SET suspended = 1 WHERE id = ?').run(targetUser.id)
@@ -147,14 +148,14 @@ router.post('/users/:id/action', async (req, res) => {
   else if (action === 'RESET_2FA') await db.prepare('DELETE FROM two_factor_secrets WHERE user_id = ?').run(targetUser.id)
 
   await auditLog(req.session.userId, action, 'USER', targetUser.id, before, { action, tier }, req.ip)
-  res.redirect(`/admin/users/${targetUser.id}`)
+  res.redirect(`${ADMIN}/users/${targetUser.id}`)
 })
 
 // User balance adjustment
 router.post('/users/:id/adjust', async (req, res) => {
   const { type, balance, amount, reason } = req.body
   const targetUser = await db.prepare('SELECT * FROM users WHERE id = ?').get(req.params.id)
-  if (!targetUser || !amount || !reason) return res.redirect(`/admin/users/${req.params.id}`)
+  if (!targetUser || !amount || !reason) return res.redirect(`${ADMIN}/users/${req.params.id}`)
 
   const balances = await getBalances(targetUser.id)
   const before = { available: balances.available.toFixed(2), pending: balances.pending.toFixed(2), lifetime: targetUser.lifetime_volume }
@@ -168,7 +169,7 @@ router.post('/users/:id/adjust', async (req, res) => {
     await manualAdjustment({ userId: targetUser.id, balance: balance || 'AVAILABLE', amount, reason })
     await auditLog(req.session.userId, 'MANUAL_ADJUSTMENT_BALANCE', 'USER', targetUser.id, before, { balance, amount, reason }, req.ip)
   }
-  res.redirect(`/admin/users/${targetUser.id}`)
+  res.redirect(`${ADMIN}/users/${targetUser.id}`)
 })
 
 // Audit log

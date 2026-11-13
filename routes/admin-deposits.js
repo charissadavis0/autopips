@@ -42,12 +42,12 @@ router.get('/', async (req, res) => {
 
 router.post('/:id/approve', async (req, res) => {
   const deposit = await db.prepare('SELECT * FROM deposits WHERE id=?').get(req.params.id)
-  if (!deposit) return res.redirect('/admin/deposits?err=Not+found')
+  if (!deposit) return res.redirect(`${ADMIN}/deposits?err=Not+found`)
   if (!['PENDING','UNDER_REVIEW','ON_HOLD'].includes(deposit.status)) {
-    return res.redirect('/admin/deposits?err=Cannot+approve+' + deposit.status + '+deposit')
+    return res.redirect(`${ADMIN}/deposits?err=Cannot+approve+' + deposit.status + '+deposit`)
   }
   const alreadyCredited = await db.prepare("SELECT id FROM ledger_entries WHERE ref_id=? AND type='DEPOSIT_APPROVED'").get(deposit.id)
-  if (alreadyCredited) return res.redirect('/admin/deposits?err=Deposit+already+credited')
+  if (alreadyCredited) return res.redirect(`${ADMIN}/deposits?err=Deposit+already+credited`)
 
   const adminNote = req.body.admin_note || ''
   const history = JSON.parse(deposit.status_history || '[]')
@@ -71,14 +71,14 @@ router.post('/:id/approve', async (req, res) => {
 
   await auditLog(req.session.userId, 'APPROVE_DEPOSIT', deposit.id,
     { status: deposit.status }, { status: 'APPROVED', credited: deposit.amount }, req.ip)
-  res.redirect('/admin/deposits?status=APPROVED&msg=Deposit+approved+and+credited')
+  res.redirect(`${ADMIN}/deposits?status=APPROVED&msg=Deposit+approved+and+credited`)
 })
 
 router.post('/:id/decline', async (req, res) => {
   const deposit = await db.prepare('SELECT * FROM deposits WHERE id=?').get(req.params.id)
-  if (!deposit) return res.redirect('/admin/deposits?err=Not+found')
+  if (!deposit) return res.redirect(`${ADMIN}/deposits?err=Not+found`)
   if (['APPROVED','REJECTED'].includes(deposit.status)) {
-    return res.redirect('/admin/deposits?err=Cannot+decline+' + deposit.status + '+deposit')
+    return res.redirect(`${ADMIN}/deposits?err=Cannot+decline+' + deposit.status + '+deposit`)
   }
   const adminNote = req.body.admin_note || 'Deposit declined by admin'
   const history = JSON.parse(deposit.status_history || '[]')
@@ -92,14 +92,14 @@ router.post('/:id/decline', async (req, res) => {
 
   await auditLog(req.session.userId, 'DECLINE_DEPOSIT', deposit.id,
     { status: deposit.status }, { status: 'REJECTED', reason: adminNote }, req.ip)
-  res.redirect('/admin/deposits?status=REJECTED&msg=Deposit+declined')
+  res.redirect(`${ADMIN}/deposits?status=REJECTED&msg=Deposit+declined`)
 })
 
 router.post('/:id/hold', async (req, res) => {
   const deposit = await db.prepare('SELECT * FROM deposits WHERE id=?').get(req.params.id)
-  if (!deposit) return res.redirect('/admin/deposits?err=Not+found')
+  if (!deposit) return res.redirect(`${ADMIN}/deposits?err=Not+found`)
   if (['APPROVED','REJECTED'].includes(deposit.status)) {
-    return res.redirect('/admin/deposits?err=Cannot+hold+' + deposit.status + '+deposit')
+    return res.redirect(`${ADMIN}/deposits?err=Cannot+hold+' + deposit.status + '+deposit`)
   }
   const adminNote = req.body.admin_note || ''
   const history = JSON.parse(deposit.status_history || '[]')
@@ -109,18 +109,18 @@ router.post('/:id/hold', async (req, res) => {
 
   await auditLog(req.session.userId, 'HOLD_DEPOSIT', deposit.id,
     { status: deposit.status }, { status: 'ON_HOLD' }, req.ip)
-  res.redirect('/admin/deposits?status=ON_HOLD&msg=Deposit+placed+on+hold')
+  res.redirect(`${ADMIN}/deposits?status=ON_HOLD&msg=Deposit+placed+on+hold`)
 })
 
 router.post('/:id/review', async (req, res) => {
   const deposit = await db.prepare('SELECT * FROM deposits WHERE id=?').get(req.params.id)
-  if (!deposit || ['APPROVED','REJECTED'].includes(deposit.status)) return res.redirect('/admin/deposits')
+  if (!deposit || ['APPROVED','REJECTED'].includes(deposit.status)) return res.redirect(`${ADMIN}/deposits`)
   const adminNote = req.body.admin_note || ''
   const history = JSON.parse(deposit.status_history || '[]')
   history.push({ status: 'UNDER_REVIEW', by: req.session.userId, at: new Date().toISOString(), note: adminNote })
   await db.prepare("UPDATE deposits SET status='UNDER_REVIEW', admin_note=?, status_history=?, updated_at=NOW() WHERE id=?")
     .run(adminNote, JSON.stringify(history), deposit.id)
-  res.redirect('/admin/deposits?status=UNDER_REVIEW&msg=Deposit+marked+under+review')
+  res.redirect(`${ADMIN}/deposits?status=UNDER_REVIEW&msg=Deposit+marked+under+review`)
 })
 
 module.exports = router

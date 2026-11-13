@@ -33,7 +33,8 @@ router.post('/login', loginLimiter, async (req, res) => {
   req.session.userId = user.id
   req.session.role = user.role
   req.session.email = user.email
-  const next = req.query.next || (user.role !== 'USER' ? '/admin' : '/dashboard')
+  const adminPath = process.env.ADMIN_PATH || '/admin'
+  const next = req.query.next || (user.role !== 'USER' ? adminPath : '/dashboard')
   res.redirect(next)
 })
 

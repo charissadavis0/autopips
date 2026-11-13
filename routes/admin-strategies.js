@@ -32,7 +32,7 @@ router.post('/', async (req, res) => {
   const { name, niche, target_country, target_audience, description, estimated_budget,
     suggested_ad_budget, difficulty, marketing_strategy, seo_strategy, social_strategy,
     setup_instructions, is_featured, status, tags, product_ids } = req.body
-  if (!name || !niche) return res.redirect('/admin/strategies/new?err=Name+and+niche+required')
+  if (!name || !niche) return res.redirect(`${ADMIN}/strategies/new?err=Name+and+niche+required`)
   const id = uuidv4()
   await db.prepare(`INSERT INTO strategies
     (id,name,niche,target_country,target_audience,description,estimated_budget,
@@ -49,12 +49,12 @@ router.post('/', async (req, res) => {
     const p = await db.prepare('SELECT name FROM products WHERE id=?').get(pid)
     if (p) await db.prepare('INSERT INTO strategy_products (id,strategy_id,product_id,product_name,sort_order) VALUES (?,?,?,?,?)').run(uuidv4(), id, pid, p.name, i)
   }
-  res.redirect('/admin/strategies?msg=Strategy+created')
+  res.redirect(`${ADMIN}/strategies?msg=Strategy+created`)
 })
 
 router.get('/:id/edit', async (req, res) => {
   const strategy = await db.prepare('SELECT * FROM strategies WHERE id=?').get(req.params.id)
-  if (!strategy) return res.redirect('/admin/strategies?err=Not+found')
+  if (!strategy) return res.redirect(`${ADMIN}/strategies?err=Not+found`)
   const user = await db.prepare('SELECT * FROM users WHERE id=?').get(req.session.userId)
   const products = await db.prepare("SELECT id, name, category FROM products WHERE status='PUBLISHED' ORDER BY name").all()
   const strategyProducts = await db.prepare('SELECT product_id FROM strategy_products WHERE strategy_id=?').all(req.params.id)
@@ -79,12 +79,12 @@ router.post('/:id', async (req, res) => {
     const p = await db.prepare('SELECT name FROM products WHERE id=?').get(pid)
     if (p) await db.prepare('INSERT INTO strategy_products (id,strategy_id,product_id,product_name,sort_order) VALUES (?,?,?,?,?)').run(uuidv4(), req.params.id, pid, p.name, i)
   }
-  res.redirect('/admin/strategies?msg=Strategy+updated')
+  res.redirect(`${ADMIN}/strategies?msg=Strategy+updated`)
 })
 
 router.post('/:id/delete', async (req, res) => {
   await db.prepare('DELETE FROM strategies WHERE id=?').run(req.params.id)
-  res.redirect('/admin/strategies?msg=Strategy+deleted')
+  res.redirect(`${ADMIN}/strategies?msg=Strategy+deleted`)
 })
 
 module.exports = router

@@ -34,7 +34,7 @@ router.get('/new', async (req, res) => {
 
 router.post('/', withUpload(upload.single('qr_code'), '/admin/wallets/new'), async (req, res) => {
   const { coin, network, address, label, instructions, min_deposit, network_warning, enabled } = req.body
-  if (!coin || !network || !address) return res.redirect('/admin/wallets/new?err=Coin%2C+network+and+address+are+required')
+  if (!coin || !network || !address) return res.redirect(`${ADMIN}/wallets/new?err=Coin%2C+network+and+address+are+required`)
 
   const fbUrls = await persistUploads(req, 'qrcodes')
   const qrCode = fbUrls['qr_code'] || (req.file ? `/uploads/qrcodes/${req.file.filename}` : null)
@@ -42,12 +42,12 @@ router.post('/', withUpload(upload.single('qr_code'), '/admin/wallets/new'), asy
   await db.prepare(`INSERT INTO payment_methods (id,coin,network,address,label,enabled)
     VALUES (?,?,?,?,?,?)`)
     .run(uuidv4(), coin.trim(), network.trim(), address.trim(), label||`${coin} (${network})`, enabled ? 1 : 0)
-  res.redirect('/admin/wallets?msg=Wallet+added')
+  res.redirect(`${ADMIN}/wallets?msg=Wallet+added`)
 })
 
 router.get('/:id/edit', async (req, res) => {
   const method = await db.prepare('SELECT * FROM payment_methods WHERE id=?').get(req.params.id)
-  if (!method) return res.redirect('/admin/wallets?err=Not+found')
+  if (!method) return res.redirect(`${ADMIN}/wallets?err=Not+found`)
   const user = await db.prepare('SELECT * FROM users WHERE id=?').get(req.session.userId)
   const flash = req.query.err ? { error: req.query.err } : {}
   res.render('admin/wallets/form', { user, path: '/admin/wallets', flash, method, pendingWithdrawals: await getPW() })
@@ -55,7 +55,7 @@ router.get('/:id/edit', async (req, res) => {
 
 router.post('/:id', (req, res, next) => withUpload(upload.single('qr_code'), `/admin/wallets/${req.params.id}/edit`)(req, res, next), async (req, res) => {
   const existing = await db.prepare('SELECT * FROM payment_methods WHERE id=?').get(req.params.id)
-  if (!existing) return res.redirect('/admin/wallets')
+  if (!existing) return res.redirect(`${ADMIN}/wallets`)
   const { coin, network, address, label, enabled } = req.body
   if (!coin || !network || !address) return res.redirect(`/admin/wallets/${req.params.id}/edit?err=Coin%2C+network+and+address+required`)
 
@@ -66,13 +66,13 @@ router.post('/:id', (req, res, next) => withUpload(upload.single('qr_code'), `/a
 
   await db.prepare(`UPDATE payment_methods SET coin=?,network=?,address=?,label=?,enabled=? WHERE id=?`)
     .run(coin.trim(), network.trim(), address.trim(), label||`${coin} (${network})`, enabled ? 1 : 0, req.params.id)
-  res.redirect('/admin/wallets?msg=Wallet+updated')
+  res.redirect(`${ADMIN}/wallets?msg=Wallet+updated`)
 })
 
 router.post('/:id/toggle', async (req, res) => {
   const method = await db.prepare('SELECT * FROM payment_methods WHERE id=?').get(req.params.id)
   if (method) await db.prepare('UPDATE payment_methods SET enabled=? WHERE id=?').run(method.enabled ? 0 : 1, req.params.id)
-  res.redirect('/admin/wallets?msg=Wallet+status+updated')
+  res.redirect(`${ADMIN}/wallets?msg=Wallet+status+updated`)
 })
 
 router.post('/:id/delete-qr', async (req, res) => {
@@ -84,7 +84,7 @@ router.post('/:id/delete-qr', async (req, res) => {
 router.post('/:id/delete', async (req, res) => {
   const method = await db.prepare('SELECT * FROM payment_methods WHERE id=?').get(req.params.id)
   if (method) { await deleteUpload(method.qr_code); await db.prepare('DELETE FROM payment_methods WHERE id=?').run(req.params.id) }
-  res.redirect('/admin/wallets?msg=Wallet+removed')
+  res.redirect(`${ADMIN}/wallets?msg=Wallet+removed`)
 })
 
 module.exports = router

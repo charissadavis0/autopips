@@ -49,7 +49,7 @@ router.get('/new', async (req, res) => {
 router.post('/', withUpload(expertFields, '/admin/experts/new'), async (req, res) => {
   const { name, bio, country, years_experience, areas_of_expertise, target_markets,
     case_studies, verification_note, is_verified, status } = req.body
-  if (!name) return res.redirect('/admin/experts/new?err=Name+required')
+  if (!name) return res.redirect(`${ADMIN}/experts/new?err=Name+required`)
 
   const id = uuidv4()
   const fbUrls = await persistUploads(req, 'experts')
@@ -68,12 +68,12 @@ router.post('/', withUpload(expertFields, '/admin/experts/new'), async (req, res
       profileImg, coverImg, gallery,
       areas_of_expertise||'[]', target_markets||'[]', case_studies||'',
       is_verified ? 1 : 0, verification_note||'', status||'DRAFT', req.session.userId)
-  res.redirect('/admin/experts?msg=Expert+created')
+  res.redirect(`${ADMIN}/experts?msg=Expert+created`)
 })
 
 router.get('/:id/edit', async (req, res) => {
   const expert = await db.prepare('SELECT * FROM experts WHERE id=?').get(req.params.id)
-  if (!expert) return res.redirect('/admin/experts?err=Not+found')
+  if (!expert) return res.redirect(`${ADMIN}/experts?err=Not+found`)
   const user = await db.prepare('SELECT * FROM users WHERE id=?').get(req.session.userId)
   const flash = req.query.err ? { error: req.query.err } : req.query.msg ? { success: req.query.msg } : {}
   res.render('admin/experts/form', { user, path: '/admin/experts', flash, expert, pendingWithdrawals: await getPW() })
@@ -81,7 +81,7 @@ router.get('/:id/edit', async (req, res) => {
 
 router.post('/:id/update', (req, res, next) => withUpload(expertFields, `/admin/experts/${req.params.id}/edit`)(req, res, next), async (req, res) => {
   const existing = await db.prepare('SELECT * FROM experts WHERE id=?').get(req.params.id)
-  if (!existing) return res.redirect('/admin/experts')
+  if (!existing) return res.redirect(`${ADMIN}/experts`)
   const { name, bio, country, years_experience, areas_of_expertise, target_markets,
     case_studies, verification_note, is_verified, status, remove_gallery } = req.body
 
@@ -109,7 +109,7 @@ router.post('/:id/update', (req, res, next) => withUpload(expertFields, `/admin/
       profileImg, coverImg, JSON.stringify(gallery),
       areas_of_expertise||'[]', target_markets||'[]', case_studies||'',
       is_verified ? 1 : 0, verification_note||'', status||'DRAFT', req.params.id)
-  res.redirect('/admin/experts?msg=Expert+updated')
+  res.redirect(`${ADMIN}/experts?msg=Expert+updated`)
 })
 
 router.post('/:id/delete-image', async (req, res) => {
@@ -130,7 +130,7 @@ router.post('/:id/delete', async (req, res) => {
     try { const g = JSON.parse(expert.gallery||'[]'); for (const img of g) await deleteUpload(img) } catch (_) {}
     await db.prepare('DELETE FROM experts WHERE id=?').run(req.params.id)
   }
-  res.redirect('/admin/experts?msg=Expert+removed')
+  res.redirect(`${ADMIN}/experts?msg=Expert+removed`)
 })
 
 module.exports = router

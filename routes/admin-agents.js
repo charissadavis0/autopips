@@ -45,7 +45,7 @@ router.post('/', withUpload(agentFields, '/admin/agents/new'), async (req, res) 
   const { name, bio, avatar_initials, base_fee, fee_period, video_rate,
     ad_management_rate, expertise, niches, services, languages,
     is_verified, is_available, status } = req.body
-  if (!name) return res.redirect('/admin/agents/new?err=Name+required')
+  if (!name) return res.redirect(`${ADMIN}/agents/new?err=Name+required`)
   const id = uuidv4()
 
   const fbUrls = await persistUploads(req, 'agents')
@@ -61,12 +61,12 @@ router.post('/', withUpload(agentFields, '/admin/agents/new'), async (req, res) 
       expertise||'[]', niches||'[]', services||'[]', languages||'["English"]',
       is_verified ? 1 : 0, 1,
       status||'ACTIVE', profileImg, coverImg)
-  res.redirect('/admin/agents?msg=Agent+added')
+  res.redirect(`${ADMIN}/agents?msg=Agent+added`)
 })
 
 router.get('/:id/edit', async (req, res) => {
   const agent = await db.prepare('SELECT * FROM agents WHERE id=?').get(req.params.id)
-  if (!agent) return res.redirect('/admin/agents?err=Not+found')
+  if (!agent) return res.redirect(`${ADMIN}/agents?err=Not+found`)
   const user = await db.prepare('SELECT * FROM users WHERE id=?').get(req.session.userId)
   res.render('admin/agents/form', { user, path: '/admin/agents', flash: {}, agent, pendingWithdrawals: await getPW() })
 })
@@ -94,21 +94,21 @@ router.post('/:id', (req, res, next) => withUpload(agentFields, `/admin/agents/$
       expertise||'[]', niches||'[]', services||'[]', languages||'["English"]',
       is_verified ? 1 : 0, is_available ? 1 : 0,
       status||'ACTIVE', profileImg, coverImg, req.params.id)
-  res.redirect('/admin/agents?msg=Agent+updated')
+  res.redirect(`${ADMIN}/agents?msg=Agent+updated`)
 })
 
 router.post('/:id/suspend', async (req, res) => {
   await db.prepare("UPDATE agents SET status='SUSPENDED',updated_at=NOW() WHERE id=?").run(req.params.id)
-  res.redirect('/admin/agents?msg=Agent+suspended')
+  res.redirect(`${ADMIN}/agents?msg=Agent+suspended`)
 })
 router.post('/:id/activate', async (req, res) => {
   await db.prepare("UPDATE agents SET status='ACTIVE',updated_at=NOW() WHERE id=?").run(req.params.id)
-  res.redirect('/admin/agents?msg=Agent+activated')
+  res.redirect(`${ADMIN}/agents?msg=Agent+activated`)
 })
 
 router.post('/:id/delete', async (req, res) => {
   await db.prepare('DELETE FROM agents WHERE id=?').run(req.params.id)
-  res.redirect('/admin/agents?msg=Agent+removed')
+  res.redirect(`${ADMIN}/agents?msg=Agent+removed`)
 })
 
 module.exports = router
