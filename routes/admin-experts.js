@@ -4,6 +4,7 @@ const db = require('../db/database')
 const requireAdmin = require('../middleware/requireAdmin')
 const { uploaderFor, persistUploads, deleteUpload } = require('../lib/upload')
 
+const ADMIN = process.env.ADMIN_PATH || '/admin'
 const router = express.Router()
 router.use(requireAdmin())
 

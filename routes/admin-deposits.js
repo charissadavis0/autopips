@@ -4,6 +4,7 @@ const db = require('../db/database')
 const requireAdmin = require('../middleware/requireAdmin')
 const { approveDeposit } = require('../lib/ledger')
 
+const ADMIN = process.env.ADMIN_PATH || '/admin'
 const router = express.Router()
 router.use(requireAdmin())
 

@@ -3,6 +3,7 @@ const { v4: uuidv4 } = require('uuid')
 const db = require('../db/database')
 const requireAdmin = require('../middleware/requireAdmin')
 
+const ADMIN = process.env.ADMIN_PATH || '/admin'
 const router = express.Router()
 router.use(requireAdmin())
 
