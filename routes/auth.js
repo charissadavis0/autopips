@@ -12,7 +12,7 @@ const signupLimiter = rateLimit({ windowMs: 60000, max: 5 })
 
 router.get('/login', (req, res) => {
   if (req.session.userId) return res.redirect('/dashboard')
-  res.render('auth/login', { flash: req.flash?.() || {}, email: '' })
+  res.render('auth/login', { flash: req.flash?.() || {}, email: '', title: 'Sign In', metaDesc: 'Sign in to your AutoPips account to manage your AI-powered dropshipping business.' })
 })
 
 router.post('/login', loginLimiter, async (req, res) => {
@@ -40,7 +40,7 @@ router.post('/login', loginLimiter, async (req, res) => {
 
 router.get('/signup', (req, res) => {
   if (req.session.userId) return res.redirect('/dashboard')
-  res.render('auth/signup', { flash: {}, name: '', email: '' })
+  res.render('auth/signup', { flash: {}, name: '', email: '', title: 'Create Account', metaDesc: 'Join AutoPips and start your AI-powered dropshipping business today — free to sign up, no experience required.' })
 })
 
 router.post('/signup', signupLimiter, async (req, res) => {

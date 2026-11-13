@@ -53,7 +53,7 @@ app.use(async (req, res, next) => {
 app.get('/', async (req, res) => {
   const db = require('./db/database')
   const user = req.session.userId ? await db.prepare('SELECT * FROM users WHERE id = ?').get(req.session.userId) : null
-  res.render('landing', { user })
+  res.render('landing', { user, title: 'AI-Powered Dropshipping', metaDesc: 'AutoPips helps you launch and automate a profitable dropshipping business with AI agents, winning products, and expert strategies — no experience needed.' })
 })
 
 // ── One-time DB fix (protected by env secret) ─────────────────────────────────

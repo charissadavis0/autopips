@@ -15,14 +15,14 @@ router.get('/', requireAuth, async (req, res) => {
   sql += ' ORDER BY is_verified DESC, years_experience DESC'
   const experts = await db.prepare(sql).all(...params)
   const user = await db.prepare('SELECT * FROM users WHERE id=?').get(req.session.userId)
-  res.render('experts/index', { user, path: '/experts', experts, filters: { q, niche } })
+  res.render('experts/index', { user, path: '/experts', experts, filters: { q, niche }, title: 'Expert Advisors', metaDesc: 'Connect with verified dropshipping experts on AutoPips — get personalized strategy, mentorship, and insider tips to scale your store faster.' })
 })
 
 router.get('/:id', requireAuth, async (req, res) => {
   const expert = await db.prepare("SELECT * FROM experts WHERE id=? AND status='PUBLISHED'").get(req.params.id)
   if (!expert) return res.redirect('/experts')
   const user = await db.prepare('SELECT * FROM users WHERE id=?').get(req.session.userId)
-  res.render('experts/detail', { user, path: '/experts', expert })
+  res.render('experts/detail', { user, path: '/experts', expert, title: expert.name, metaDesc: `${expert.name} is a verified dropshipping expert on AutoPips — specializing in ${expert.niche || 'e-commerce'} with ${expert.years_experience || 'years of'} experience.` })
 })
 
 module.exports = router

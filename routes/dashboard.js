@@ -34,6 +34,7 @@ router.get('/', async (req, res) => {
     myProducts: myProductsR?.c || 0,
     myAgents,
     pendingTasks: pendingTasksR?.c || 0,
+    title: 'Dashboard', metaDesc: 'Manage your AutoPips dropshipping business — track earnings, monitor AI agents, and grow your store.',
   })
 })
 

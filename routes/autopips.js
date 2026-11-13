@@ -26,7 +26,7 @@ router.get('/', async (req, res) => {
   const myProductRows = await db.prepare('SELECT product_id FROM user_products WHERE user_id = ?').all(user.id)
   const myProductIds = myProductRows.map(r => r.product_id)
 
-  res.render('autopips/index', { user, path: '/autopips', flash: {}, products, categories, category, search, filter, myProductIds })
+  res.render('autopips/index', { user, path: '/autopips', flash: {}, products, categories, category, search, filter, myProductIds, title: 'Discover Products', metaDesc: 'Browse hundreds of winning dropshipping products curated by AutoPips AI — find trending items with high profit margins ready to add to your store.' })
 })
 
 router.post('/add/:productId', async (req, res) => {

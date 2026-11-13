@@ -13,7 +13,7 @@ router.get('/', async (req, res) => {
   const myAssignmentsRows = await db.prepare("SELECT agent_id FROM agent_assignments WHERE user_id = ? AND status = 'ACTIVE'").all(user.id)
   const myAssignments = myAssignmentsRows.map(r => r.agent_id)
   const flash = { error: req.query.error, success: req.query.success }
-  res.render('agents/index', { user, path: '/agents', flash, agents, myAssignments })
+  res.render('agents/index', { user, path: '/agents', flash, agents, myAssignments, title: 'AI Agents', metaDesc: 'Hire AI agents on AutoPips to handle your dropshipping tasks — customer service, product research, order fulfillment, and more, all on autopilot.' })
 })
 
 router.get('/:agentId/hire', async (req, res) => {

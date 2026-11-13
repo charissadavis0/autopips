@@ -4,6 +4,19 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title><%= typeof title !== 'undefined' ? title + ' — AutoPips' : 'AutoPips — AI-Powered Dropshipping' %></title>
+  <meta name="description" content="<%= typeof metaDesc !== 'undefined' ? metaDesc : 'AutoPips is your AI-powered dropshipping platform — discover winning products, hire AI agents, and automate your online store to profit on autopilot.' %>">
+  <meta name="robots" content="index, follow">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="AutoPips">
+  <meta property="og:title" content="<%= typeof title !== 'undefined' ? title + ' — AutoPips' : 'AutoPips — AI-Powered Dropshipping' %>">
+  <meta property="og:description" content="<%= typeof metaDesc !== 'undefined' ? metaDesc : 'AutoPips is your AI-powered dropshipping platform — discover winning products, hire AI agents, and automate your online store to profit on autopilot.' %>">
+  <meta property="og:image" content="<%= process.env.APP_URL || '' %>/og-image.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="<%= typeof title !== 'undefined' ? title + ' — AutoPips' : 'AutoPips — AI-Powered Dropshipping' %>">
+  <meta name="twitter:description" content="<%= typeof metaDesc !== 'undefined' ? metaDesc : 'AutoPips is your AI-powered dropshipping platform — discover winning products, hire AI agents, and automate your online store to profit on autopilot.' %>">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
   <link rel="stylesheet" href="/css/main.css">
   <%- typeof extraHead !== 'undefined' ? extraHead : '' %>
 </head>

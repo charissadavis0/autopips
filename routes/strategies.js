@@ -25,7 +25,7 @@ router.get('/', async (req, res) => {
   const myStratRows = await db.prepare('SELECT strategy_id FROM user_businesses WHERE user_id = ? AND strategy_id IS NOT NULL').all(user.id)
   const myStrategyIds = myStratRows.map(r => r.strategy_id)
 
-  res.render('strategies/index', { user, path: '/strategies', flash: {}, strategies, niches, niche, difficulty, search, myStrategyIds })
+  res.render('strategies/index', { user, path: '/strategies', flash: {}, strategies, niches, niche, difficulty, search, myStrategyIds, title: 'Strategies', metaDesc: 'Explore proven dropshipping strategies on AutoPips — choose your niche, copy a strategy, and launch your store with AI guidance.' })
 })
 
 router.post('/copy/:strategyId', async (req, res) => {
